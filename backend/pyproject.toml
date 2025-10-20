@@ -1,0 +1,49 @@
+[tool.poetry]
+name = "ai-fin-assistant"
+version = "0.1.0"
+description = "MVP backend for AI financial assistant"
+authors = ["Andrew <andriyderkach608@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "app"}]
+
+[tool.poetry.dependencies]
+python = ">=3.13.5,<4.0"
+uvicorn = ">=0.35.0,<0.36.0"
+fastapi = ">=0.116.1,<0.117.0"
+pydantic = {extras = ["dotenv"], version = ">=2.11.7,<3.0.0"}
+sqlalchemy = ">=2.0.43,<3.0.0"
+asyncpg = ">=0.30.0,<0.31.0"
+alembic = ">=1.16.5,<2.0.0"
+psycopg2-binary = ">=2.9.10,<3.0.0"
+openai = ">=1.108.1,<2.0.0"
+httpx = ">=0.28.1,<0.29.0"
+tenacity = ">=9.1.2,<10.0.0"
+aioredis = "^2.0.1"
+tiktoken = "^0.11.0"
+slowapi = "^0.1.9"
+jwt = "^1.4.0"
+passlib = "^1.7.4"
+pydantic-settings = "^2.11.0"
+email-validator = "^2.3.0"
+loguru = "^0.7.3"
+redis = "^6.4.0"
+greenlet = "^3.2.4"
+bcrypt = "^5.0.0"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.12.10"
+black = "^25.1.0"
+mypy = "^1.17.1"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 88
+select = ["E", "F", "W", "C", "B"]
+
+[tool.black]
+line-length = 88
+target-version = ['py313']
