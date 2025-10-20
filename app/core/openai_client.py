@@ -12,26 +12,26 @@ MAX_RETRIES = getattr(settings, "openai_max_retries", 3)
 
 # Системний промпт для фінансового асистента
 SYSTEM_PROMPT = """
-Ти — фінансовий асистент. Твоя задача — допомагати користувачу керувати своїми грошима. 
-Відповідай чітко та практично.  
+You are a financial assistant. Your task is to help the user manage their money effectively.  
+Answer clearly and practically.
 
-Правила:
-- Короткі і зрозумілі поради.
-- Не вигадуй фактів про користувача.
-- Якщо користувач задає загальне питання, дай конкретні кроки або поради.
-- Якщо запитання не про фінанси, чемно повідом користувача, що ти експерт у фінансах.
+Rules:
+- Provide short and actionable advice.
+- Do not make assumptions about the user.
+- If the user asks a general question, give specific steps or recommendations.
+- If the question is not about finance, politely inform the user that you are a finance expert.
 """
 
 @retry(stop=stop_after_attempt(MAX_RETRIES), wait=wait_fixed(2))
 async def send_message(prompt: str, user_id: int = None, context: dict | None = None) -> str:
     """
-    Відправляє prompt до OpenAI API (ChatGPT) з таймаутом і ретраями.
-    Логування запиту і відповіді (без PII).
-
-    :param prompt: текст повідомлення для AI
-    :param user_id: optional, для зв'язку з користувачем у логах
-    :param context: optional, додатковий контекст користувача
-    :return: текстова відповідь AI
+    Sends a prompt to the OpenAI API (ChatGPT) with timeout and retry handling.
+    Logs the request and response (excluding any PII).
+    
+    :param prompt: The message text to send to the AI
+    :param user_id: Optional; used to associate the log with a specific user
+    :param context: Optional; additional user context
+    :return: The AI's text response
     """
     try:
         log_event("openai_request", user_id=user_id, prompt=prompt[:100], context=context)
