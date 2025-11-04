@@ -16,7 +16,7 @@ async def get_user_usage(
     session: AsyncSession = Depends(get_session)
 ):
     """
-    Повертає всі usage логи для поточного користувача.
+    Returns all usage logs for the current user.
     """
     result = await session.execute(
         select(AssistantUsageLog)

@@ -34,7 +34,7 @@ async def register_user(user_in: UserCreate, db: AsyncSession = Depends(get_sess
 
     new_user = await create_user(db, user_in=user_in)
 
-    # Генеруємо verification_token (імітуємо відправку поштою)
+    # Generate verification_token (simulate sending via email)
     verification_token = create_verification_token(new_user.id)
 
     return {
@@ -44,7 +44,7 @@ async def register_user(user_in: UserCreate, db: AsyncSession = Depends(get_sess
         "is_active": new_user.is_active,
         "is_verified": new_user.is_verified,
         "created_at": new_user.created_at,
-        "verification_token": verification_token  # 🔹 фронт отримає токен для MVP
+        "verification_token": verification_token  # 🔹 frontend will receive the token for MVP
     }
 
 
@@ -77,7 +77,7 @@ async def login(request: Request, user_in: UserLogin, db: AsyncSession = Depends
     access_token = create_access_token(data={"user_id": user.id})
     refresh_token = create_refresh_token(data={"user_id": user.id})
 
-    # 🔹 Зберігаємо refresh токен у базі
+    # 🔹 Save the refresh token in the database
     await save_refresh_token(db, user.id, refresh_token)
 
     response = JSONResponse(
@@ -87,7 +87,7 @@ async def login(request: Request, user_in: UserLogin, db: AsyncSession = Depends
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=False,  # 🔹 локально
+        secure=False,  # 🔹 locally
         samesite="lax",
         max_age=60 * 60 * 24 * 7,
     )

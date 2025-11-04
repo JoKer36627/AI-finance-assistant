@@ -3,10 +3,10 @@ import sys
 import json
 from datetime import datetime
 
-# Очищаємо стандартні хендлери
+# Remove default handlers
 logger.remove()
 
-# Виводимо JSON у stdout
+# Output JSON to stdout
 logger.add(
     sys.stdout,
     format="{message}",
@@ -17,7 +17,7 @@ logger.add(
 PII_FIELDS = {"email", "name", "password", "capital", "income", "token", "refresh_token"}
 
 def sanitize_value(value, max_len: int = 300):
-    """Очищує текст від потенційних PII та обмежує довжину."""
+    """Cleans text from potential PII and limits its length."""
     if not value:
         return ""
     if isinstance(value, (dict, list)):
@@ -32,7 +32,7 @@ def sanitize_value(value, max_len: int = 300):
 
 def log_event(event_name: str, user_id: int = None, **kwargs):
     """
-    Логування події у форматі JSON (без PII).
+    Logs an event in JSON format (without PII).
     """
     payload = {
         "event": event_name,

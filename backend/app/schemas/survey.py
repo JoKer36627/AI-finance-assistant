@@ -13,7 +13,7 @@ class SurveyBase(BaseModel):
     sport_type: Optional[str] = Field(None, description="Type of sport if sport=True", example="Basketball")
     non_financial_goal: Optional[str] = Field(None, description="Non-financial goal", example="Travel more")
 
-    # --- Валідатори ---
+    # --- Validators ---
     @field_validator("age")
     def validate_age(cls, v):
         if v <= 0:

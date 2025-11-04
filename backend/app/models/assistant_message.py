@@ -2,7 +2,7 @@ from sqlalchemy import select
 from app.models.assistant import AssistantMessage
 
 class AssistantManager:
-    """Менеджер для роботи з історією повідомлень користувача."""
+    """Manager for handling user's message history."""
 
     @staticmethod
     async def get_history(session, user_id: int, limit: int = 10):
@@ -12,7 +12,7 @@ class AssistantManager:
             .order_by(AssistantMessage.created_at.desc())
         )
         messages = result.scalars().all()
-        # повертаємо у правильному порядку (старі → нові)
+        # return in correct order (old → new)
         return list(reversed(messages[-limit:]))
 
     @staticmethod

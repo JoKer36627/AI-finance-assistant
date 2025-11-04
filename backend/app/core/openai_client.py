@@ -7,30 +7,30 @@ from app.logger import log_event
 from app.models.assistant_usage import AssistantUsageLog
 from app.db.session import AsyncSessionLocal
 
-# Ініціалізація ключа OpenAI
+# Initialize OpenAI API key
 openai.api_key = settings.openai_api_key
 
 OPENAI_TIMEOUT = getattr(settings, "openai_timeout", 15)
 MAX_RETRIES = getattr(settings, "openai_max_retries", 3)
 
-# Системний промпт для фінансового асистента
+# System prompt for the financial assistant
 SYSTEM_PROMPT = """
-Ти — фінансовий асистент. Твоя задача — допомагати користувачу керувати своїми грошима. 
-Відповідай чітко та практично, базуючись на наданому контексті користувача.
+You are a financial assistant. Your task is to help the user manage their money.
+Respond clearly and practically, based on the user's provided context.
 
-Правила:
-- Використовуй дані з User context та Survey context для персоналізованих порад.
-- Короткі і зрозумілі поради.
-- Не вигадуй фактів про користувача.
-- Якщо користувач задає загальне питання, дай конкретні кроки або поради.
-- Якщо запитання не про фінанси, чемно повідом користувача, що ти експерт у фінансах.
+Rules:
+- Use data from User context and Survey context to give personalized advice.
+- Keep answers short and easy to understand.
+- Do not invent facts about the user.
+- If the user asks a general question, give clear steps or actionable advice.
+- If the question is not finance-related, politely inform the user that you are a finance expert.
 """
 
 @retry(stop=stop_after_attempt(MAX_RETRIES), wait=wait_fixed(2))
 async def send_message(messages: list, user_id: int = None, context: dict | None = None) -> str:
     """
-    Відправляє messages до OpenAI API (ChatGPT) з таймаутом і ретраями.
-    Логування запиту, тривалості, usage і відповіді (без PII).
+    Sends messages to the OpenAI API (ChatGPT) with timeout and retries.
+    Logs request, duration, usage, and response (without PII).
     """
     start_time = time.time()
     try:
@@ -47,7 +47,7 @@ async def send_message(messages: list, user_id: int = None, context: dict | None
         duration = round(time.time() - start_time, 2)
         usage = getattr(response, "usage", None)
 
-        # --- Логування ---
+        # --- Logging ---
         log_event(
             "openai_response",
             user_id=user_id,
@@ -61,7 +61,7 @@ async def send_message(messages: list, user_id: int = None, context: dict | None
         text_response = response.choices[0].message.content
         log_event("openai_message_text", user_id=user_id, response_preview=text_response[:200])
 
-        # --- Збереження статистики у БД ---
+        # --- Save usage statistics to DB ---
         await save_usage_log(user_id, getattr(response, "model", None), usage, duration)
 
         return text_response
@@ -75,7 +75,7 @@ async def send_message(messages: list, user_id: int = None, context: dict | None
 
 
 async def save_usage_log(user_id: int, model: str, usage, duration: float):
-    """Зберігає статистику використання OpenAI у БД."""
+    """Saves OpenAI usage statistics to the database."""
     async with AsyncSessionLocal() as session:
         log = AssistantUsageLog(
             user_id=user_id,

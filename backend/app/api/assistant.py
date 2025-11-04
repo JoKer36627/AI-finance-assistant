@@ -36,18 +36,18 @@ async def check_rate_limit(user_id: int):
     key = f"{REDIS_RATE_LIMIT_KEY}{user_id}"
     current = await r.get(key)
     if current and int(current) >= MAX_REQUESTS_PER_MINUTE:
-        raise HTTPException(status_code=429, detail="Занадто багато запитів, зачекайте хвилину")
+        raise HTTPException(status_code=429, detail="Too many requests, please wait a minute")
     pipe = r.pipeline()
     pipe.incr(key, amount=1)
     pipe.expire(key, 60)
     await pipe.execute()
 
 def truncate_prompt_by_tokens(messages: list, max_tokens: int = MAX_TOKENS) -> list:
-    """Обрізає контекст повідомлень за кількістю токенів."""
+    """Truncates the message context by token count."""
     encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
     total_tokens = 0
     truncated = []
-    for msg in reversed(messages):  # починаємо з останніх
+    for msg in reversed(messages):  # start from the latest
         tokens = len(encoding.encode(msg["content"]))
         if total_tokens + tokens > max_tokens:
             break
@@ -65,13 +65,13 @@ async def chat_with_assistant(
         await check_rate_limit(current_user)
         log_event("assistant_request", user_id=current_user, message=request.message[:100])
 
-        # --- Збереження запиту користувача ---
+        # --- Saving the user's request ---
         await create_assistant_message(session, current_user, "user", request.message)
 
-        # --- Історія ---
+        # --- History ---
         history_msgs: List = await AssistantManager.get_history(session, current_user, limit=MAX_HISTORY)
 
-        # --- Підтягування User і Survey ---
+        # --- Fetching User and Survey ---
         user = await session.get(User, current_user)
         result = await session.execute(
             select(SurveyResult)
@@ -80,7 +80,7 @@ async def chat_with_assistant(
         )
         survey = result.scalars().first()
 
-        # --- Формування messages ---
+        # --- Constructing messages ---
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
         if user:
@@ -99,13 +99,13 @@ async def chat_with_assistant(
 
         messages.append({"role": "user", "content": request.message})
 
-        # --- Обрізаємо prompt ---
+        # --- Truncate the prompt ---
         messages = truncate_prompt_by_tokens(messages, MAX_TOKENS)
 
-        # --- Виклик OpenAI ---
+        # --- Calling OpenAI ---
         ai_reply = await send_message(messages=messages, user_id=current_user, context=request.context)
 
-        # --- Збереження відповіді AI ---
+        # --- Saving AI response ---
         await create_assistant_message(session, current_user, "assistant", ai_reply)
         log_event("assistant_response", user_id=current_user, response=ai_reply[:200])
 
@@ -116,4 +116,4 @@ async def chat_with_assistant(
     except Exception as e:
         log_event("assistant_error", user_id=current_user, error=str(e))
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail="Помилка при обробці запиту до AI асистента")
+                            detail="Error processing request to AI assistant")

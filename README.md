@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # AI Finance Assistant (Backend)
 
 This repository contains the **backend of the AI Finance Assistant**, built with **FastAPI** and **PostgreSQL**, including AI assistant logic via OpenAI integration.  
@@ -45,3 +46,6 @@ http://localhost:8000/docs
 Notes
 	•	Backend is fully functional; deployment and frontend are not included yet.
 	•	Designed for local development and future frontend integration.
+=======
+# AI Finance Assistant
+>>>>>>> 3356ef6 (Updated backend and frontend parts)

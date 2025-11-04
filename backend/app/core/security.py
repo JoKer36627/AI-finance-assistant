@@ -11,7 +11,9 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # --- Password ---
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    max_len = 72
+    truncated_pw = password[:max_len]
+    return pwd_context.hash(truncated_pw)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)

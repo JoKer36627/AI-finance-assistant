@@ -35,7 +35,7 @@ class Settings(BaseSettings):
 
         extra = "allow"
 
-    # Валідатор для database_url
+    # validator for database_url
     @field_validator("database_url", mode="before")
     def assemble_db_url(cls, v, info):
         if v is not None:

@@ -1,4 +1,3 @@
-# check_tables.py
 import asyncio
 from app.db.session import get_session
 from app.models.user import User
@@ -13,7 +12,7 @@ async def check_table(model, name):
         records = result.scalars().all()
         print(f"Table '{name}' has {len(records)} records.")
         if records:
-            print(records[:5])  # виведе перші 5 записів
+            print(records[:5])  # return first 5 records
         print("-" * 40)
 
 async def main():

@@ -11,9 +11,10 @@ from fastapi.openapi.utils import get_openapi
 
 from app.config import settings
 from app.logger import log_event
-from app.api import user, auth, message, feedback
+from app.api import user, auth, message, feedback, event
 from fastapi.exceptions import RequestValidationError
 from app.api import assistant
+
 
 
 
@@ -23,13 +24,13 @@ app = FastAPI(title=settings.app_name)
 app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
 
-# 🔹 Підключаємо middleware для rate-limit
+# 🔹 Connect middleware for rate-limiting
 app.add_exception_handler(RateLimitExceeded, lambda request, exc: log_event("rate_limit_exceeded", url=str(request.url)))
 
-# --- OAuth2 ---                
+# --- OAuth2 ---
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-# --- Middleware для логування ---
+# --- Middleware for logging ---
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     log_event(
@@ -95,7 +96,7 @@ def custom_openapi():
 
 
 
-# --- Підключаємо роутери ---
+# --- Connect routers ---
 app.include_router(user.router)
 app.include_router(auth.router)
 app.include_router(survey.router)
@@ -103,3 +104,4 @@ app.include_router(message.router)
 app.include_router(feedback.router)
 app.openapi = custom_openapi
 app.include_router(assistant.router)
+app.include_router(event.router)
