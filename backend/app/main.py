@@ -5,7 +5,6 @@ from app.core.limiter import limiter
 from fastapi import Request
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
 from app.api import survey
 from fastapi.openapi.utils import get_openapi
 

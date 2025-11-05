@@ -46,7 +46,7 @@ async def update_survey(db: AsyncSession, user_id: int, survey_update: SurveyUpd
 
     update_data = survey_update.dict(exclude_unset=True)
 
-    # --- Валідація перед оновленням ---
+    # --- Validate before update ---
     if "age" in update_data and update_data["age"] <= 0:
         raise HTTPException(status_code=422, detail="Age must be greater than 0")
     if "capital" in update_data and update_data["capital"] < 0:
