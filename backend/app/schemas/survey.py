@@ -4,14 +4,14 @@ from typing import Optional, List
 
 
 class SurveyBase(BaseModel):
-    age: int = Field(..., description="Age of the user", example=26)
-    capital: float = Field(..., ge=0, description="Available capital", example=12000)
-    skills: List[str] = Field(..., min_items=1, description="User skills", example=["Python", "SQL"])
-    financial_goal: str = Field(..., description="Financial goal", example="Buy a car")
+    age: int = Field(..., description="Age of the user", example=0)
+    capital: float = Field(..., ge=0, description="Available capital", example=0)
+    skills: List[str] = Field(..., min_items=1, description="User skills", example=["string"])
+    financial_goal: str = Field(..., description="Financial goal", example="string")
 
     sport: Optional[bool] = Field(None, description="Does user do sport?", example=True)
-    sport_type: Optional[str] = Field(None, description="Type of sport if sport=True", example="Basketball")
-    non_financial_goal: Optional[str] = Field(None, description="Non-financial goal", example="Travel more")
+    sport_type: Optional[str] = Field(None, description="Type of sport if sport=True", example="string")
+    non_financial_goal: Optional[str] = Field(None, description="Non-financial goal", example="string")
 
     # --- Validators ---
     @field_validator("age")

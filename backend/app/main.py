@@ -2,7 +2,6 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 from app.core.limiter import limiter
-from fastapi import Request
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
 from app.api import survey
@@ -13,7 +12,6 @@ from app.logger import log_event
 from app.api import user, auth, message, feedback, event
 from fastapi.exceptions import RequestValidationError
 from app.api import assistant
-
 
 
 
