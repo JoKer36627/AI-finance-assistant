@@ -1,6 +1,5 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2PasswordBearer
 from app.core.limiter import limiter
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
@@ -20,12 +19,6 @@ from app.api import assistant
 app = FastAPI(title=settings.app_name)
 app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
-
-# 🔹 Connect middleware for rate-limiting
-app.add_exception_handler(RateLimitExceeded, lambda request, exc: log_event("rate_limit_exceeded", url=str(request.url)))
-
-# --- OAuth2 ---
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 # --- Middleware for logging ---
 @app.middleware("http")
@@ -52,6 +45,7 @@ def health_check():
 # --- Rate limit handler ---
 @app.exception_handler(RateLimitExceeded)
 async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    log_event("rate_limit_exceeded", url=str(request.url))
     return JSONResponse(
         status_code=429,
         content={"detail": "Too many login attempts, try again later."},
@@ -73,7 +67,7 @@ def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
     openapi_schema = get_openapi(
-        title="My API",
+        title=settings.app_name,
         version="1.0.0",
         description="API with JWT",
         routes=app.routes,
@@ -85,9 +79,11 @@ def custom_openapi():
             "bearerFormat": "JWT"
         }
     }
-    for path in openapi_schema["paths"].values():
-        for method in path.values():
-            method["security"] = [{"BearerAuth": []}]
+    public_paths = {"/healthz", "/auth/login", "/auth/register", "/auth/verify-email", "/auth/refresh"}
+    for path, path_item in openapi_schema["paths"].items():
+        for method in path_item.values():
+            if path not in public_paths:
+                method["security"] = [{"BearerAuth": []}]
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 

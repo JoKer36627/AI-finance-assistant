@@ -8,12 +8,13 @@ import tiktoken
 
 from app.config import settings
 from app.core.security import get_current_user_from_token as get_current_user
-from app.schemas.assistant import create_assistant_message, ChatRequest, ChatResponse
+from app.schemas.assistant import ChatRequest, ChatResponse
 from app.db.session import get_session
 from app.logger import log_event
 from app.models.survey import SurveyResult
 from app.models.user import User
 from app.models.assistant_message import AssistantManager
+from app.crud.assistant import create_assistant_message
 from app.core.openai_client import send_message, SYSTEM_PROMPT
 
 router = APIRouter(prefix="/assistant", tags=["assistant"])
@@ -65,11 +66,11 @@ async def chat_with_assistant(
         await check_rate_limit(current_user)
         log_event("assistant_request", user_id=current_user, message=request.message[:100])
 
+        # --- History before storing the new message to avoid prompt duplication ---
+        history_msgs: List = await AssistantManager.get_history(session, current_user, limit=MAX_HISTORY)
+
         # --- Saving the user's request ---
         await create_assistant_message(session, current_user, "user", request.message)
-
-        # --- History ---
-        history_msgs: List = await AssistantManager.get_history(session, current_user, limit=MAX_HISTORY)
 
         # --- Fetching User and Survey ---
         user = await session.get(User, current_user)

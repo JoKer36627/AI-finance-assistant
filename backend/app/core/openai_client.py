@@ -41,7 +41,8 @@ async def send_message(messages: list, user_id: int = None, context: dict | None
             model="gpt-3.5-turbo",
             messages=messages,
             temperature=0.7,
-            max_tokens=500
+            max_tokens=500,
+            timeout=OPENAI_TIMEOUT,
         )
 
         duration = round(time.time() - start_time, 2)
@@ -79,10 +80,10 @@ async def save_usage_log(user_id: int, model: str, usage, duration: float):
     async with AsyncSessionLocal() as session:
         log = AssistantUsageLog(
             user_id=user_id,
-            model=model,
-            prompt_tokens=getattr(usage, "prompt_tokens", None),
-            completion_tokens=getattr(usage, "completion_tokens", None),
-            total_tokens=getattr(usage, "total_tokens", None),
+            model=model or "unknown",
+            prompt_tokens=getattr(usage, "prompt_tokens", 0) or 0,
+            completion_tokens=getattr(usage, "completion_tokens", 0) or 0,
+            total_tokens=getattr(usage, "total_tokens", 0) or 0,
             duration=duration
         )
         session.add(log)
