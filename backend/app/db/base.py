@@ -9,3 +9,4 @@ from app.models.feedback import Feedback
 from app.models.assistant import AssistantMessage
 from app.models.assistant_usage import AssistantUsageLog
 from app.models.event import Event
+from app.models.transaction import Transaction

@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     openai_max_retries: int = Field(3, env="OPENAI_MAX_RETRIES")
 
     redis_url: str = Field("redis://localhost:6379", env="REDIS_URL")
+    cors_origins: str = Field("", env="CORS_ORIGINS")
 
     class Config:
         env_file = ".env"

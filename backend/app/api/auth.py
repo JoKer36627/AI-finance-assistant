@@ -2,7 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.exc import SQLAlchemyError
 
+from app.config import settings
 from app.core.limiter import limiter
 from app.crud.user import (
     get_user_by_email,
@@ -11,7 +13,9 @@ from app.crud.user import (
     remove_refresh_token,
     verify_user_email,
 )
+from app.crud.event import create_event
 from app.db.session import get_session
+from app.schemas.event import EventCreate
 from app.schemas.user import UserCreate, UserRead, UserLogin, Token, VerifyEmailResponse
 from app.models.user import User
 from app.core.security import (
@@ -23,6 +27,17 @@ from app.core.security import (
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+async def safe_create_auth_event(db: AsyncSession, user_id: int, event_type: str, meta: dict | None = None):
+    try:
+        await create_event(
+            db,
+            user_id,
+            EventCreate(event_type=event_type, meta=meta or {}),
+        )
+    except SQLAlchemyError:
+        await db.rollback()
 
 
 # --- Register ---
@@ -65,13 +80,13 @@ async def verify_email(token: str, db: AsyncSession = Depends(get_session)):
 
 # --- Login ---
 @router.post("/login", response_model=Token)
-@limiter.limit("5/minute")
+@limiter.limit("100/minute" if settings.app_env == "development" else "5/minute")
 async def login(request: Request, user_in: UserLogin, db: AsyncSession = Depends(get_session)):
     user = await get_user_by_email(db, email=user_in.email)
     if not user or not verify_password(user_in.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    if not user.is_verified:
+    if not user.is_verified and settings.app_env != "development":
         raise HTTPException(status_code=403, detail="Email not verified")
 
     access_token = create_access_token(data={"user_id": user.id})
@@ -79,6 +94,12 @@ async def login(request: Request, user_in: UserLogin, db: AsyncSession = Depends
 
     # 🔹 Save the refresh token in the database
     await save_refresh_token(db, user.id, refresh_token)
+    await safe_create_auth_event(
+        db,
+        user.id,
+        "user_logged_in",
+        {"email": user.email},
+    )
 
     response = JSONResponse(
         content={"access_token": access_token, "token_type": "bearer"}

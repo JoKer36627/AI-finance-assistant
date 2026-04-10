@@ -13,14 +13,17 @@ from app.db.session import get_session
 from app.logger import log_event
 from app.models.survey import SurveyResult
 from app.models.user import User
+from app.models.transaction import Transaction
 from app.models.assistant_message import AssistantManager
 from app.crud.assistant import create_assistant_message
 from app.core.openai_client import send_message, SYSTEM_PROMPT
+from app.crud.transaction import build_summary
 
 router = APIRouter(prefix="/assistant", tags=["assistant"])
 
 MAX_HISTORY = 10
 MAX_TOKENS = 3000
+MAX_TRANSACTION_CONTEXT = 15
 REDIS_RATE_LIMIT_KEY = "user_rate_limit:"
 MAX_REQUESTS_PER_MINUTE = 5
 
@@ -80,6 +83,14 @@ async def chat_with_assistant(
             .order_by(SurveyResult.created_at.desc())
         )
         survey = result.scalars().first()
+        transaction_result = await session.execute(
+            select(Transaction)
+            .where(Transaction.user_id == current_user)
+            .order_by(Transaction.transaction_date.desc(), Transaction.created_at.desc())
+            .limit(MAX_TRANSACTION_CONTEXT)
+        )
+        recent_transactions = transaction_result.scalars().all()
+        summary = await build_summary(session, current_user)
 
         # --- Constructing messages ---
         messages = [{"role": "system", "content": SYSTEM_PROMPT}]
@@ -94,6 +105,41 @@ async def chat_with_assistant(
 
         if survey:
             messages.append({"role": "system", "content": f"Survey context: {json.dumps(survey.answers, ensure_ascii=False)}"})
+
+        messages.append(
+            {
+                "role": "system",
+                "content": (
+                    "Transaction summary context: "
+                    f"{json.dumps(summary.model_dump(mode='json'), ensure_ascii=False)}"
+                ),
+            }
+        )
+
+        if recent_transactions:
+            transaction_context = [
+                {
+                    "type": transaction.type,
+                    "amount": float(transaction.amount),
+                    "amount_pln": float(transaction.amount_pln),
+                    "exchange_rate": float(transaction.exchange_rate),
+                    "currency": transaction.currency,
+                    "category": transaction.category,
+                    "note": transaction.note,
+                    "date": transaction.transaction_date.date().isoformat(),
+                    "source": transaction.source,
+                }
+                for transaction in recent_transactions
+            ]
+            messages.append(
+                {
+                    "role": "system",
+                    "content": (
+                        "Recent transactions context: "
+                        f"{json.dumps(transaction_context, ensure_ascii=False)}"
+                    ),
+                }
+            )
 
         for msg in history_msgs:
             messages.append({"role": msg.role, "content": msg.content})

@@ -5,10 +5,11 @@ from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
 from app.api import survey
 from fastapi.openapi.utils import get_openapi
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.logger import log_event
-from app.api import user, auth, message, feedback, event
+from app.api import user, auth, message, feedback, event, transactions
 from fastapi.exceptions import RequestValidationError
 from app.api import assistant
 
@@ -16,9 +17,31 @@ from app.api import assistant
 
 
 # --- FastAPI app ---
+default_cors_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500",
+    "null",
+]
+configured_cors_origins = [
+    origin.strip()
+    for origin in settings.cors_origins.split(",")
+    if origin.strip()
+]
+
 app = FastAPI(title=settings.app_name)
 app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[*default_cors_origins, *configured_cors_origins],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # --- Middleware for logging ---
 @app.middleware("http")
@@ -98,3 +121,4 @@ app.include_router(feedback.router)
 app.openapi = custom_openapi
 app.include_router(assistant.router)
 app.include_router(event.router)
+app.include_router(transactions.router)
