@@ -10,8 +10,10 @@ const ACCESS_TOKEN_KEY = "ai_fin_assistant_access_token";
 
 async function apiRequest(path, options = {}) {
     const token = authApi.getToken();
+    const isNgrokBackend = API_BASE.includes("ngrok-free.dev") || API_BASE.includes("ngrok.app");
     const headers = {
         "Content-Type": "application/json",
+        ...(isNgrokBackend ? { "ngrok-skip-browser-warning": "true" } : {}),
         ...(options.headers || {})
     };
 
