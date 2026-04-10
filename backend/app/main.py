@@ -38,6 +38,12 @@ app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[*default_cors_origins, *configured_cors_origins],
+    allow_origin_regex=(
+        r"https://([a-zA-Z0-9-]+\.)*vercel\.app$"
+        r"|https://([a-zA-Z0-9-]+\.)*ngrok-free\.dev$"
+        r"|http://localhost(:[0-9]+)?$"
+        r"|http://127\.0\.0\.1(:[0-9]+)?$"
+    ),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
