@@ -609,6 +609,8 @@ textarea:focus {
 
 .chart-panel {
     background: rgba(255, 255, 255, 0.95);
+    position: relative;
+    min-height: 420px;
 }
 
 .chart-panel-wide {
@@ -852,6 +854,20 @@ td {
     font-size: 1.1rem;
 }
 
+.chart-panel canvas {
+    display: block;
+    width: 100% !important;
+}
+
+#line-chart,
+#bar-chart {
+    height: 320px !important;
+}
+
+#pie-chart {
+    height: 320px !important;
+}
+
 .toast {
     position: fixed;
     right: 24px;
@@ -871,11 +887,6 @@ td {
 
 .toast.error {
     background: rgba(239, 68, 68, 0.96);
-}
-
-canvas {
-    width: 100% !important;
-    max-width: 100%;
 }
 
 @media (max-width: 1280px) {
