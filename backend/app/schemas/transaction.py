@@ -130,6 +130,20 @@ class PeriodBreakdownItem(BaseModel):
     expense: Decimal
 
 
+class FileAnalysisSummary(BaseModel):
+    income_total: Decimal
+    expense_total: Decimal
+    net_total: Decimal
+    currency: str = "PLN"
+    top_categories: list[CategoryBreakdownItem]
+
+
+class FileAnalysisResponse(BaseModel):
+    transactions: list[TransactionParseResponse]
+    summary: FileAnalysisSummary
+    insights: list[str]
+
+
 class TransactionSummaryResponse(BaseModel):
     balance: Decimal
     starting_balance: Decimal = Decimal("0")

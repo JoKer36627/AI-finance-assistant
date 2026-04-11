@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.currency import convert_to_pln
 from app.core.security import get_current_user_from_token
 from app.core.transaction_parser import parse_transaction_text
+from app.core.transaction_parser import parse_transactions_file
 from app.crud import event as crud_event
 from app.crud import transaction as crud_transaction
 from app.db.session import get_session
@@ -11,6 +12,7 @@ from app.schemas.event import EventCreate
 from app.schemas.transaction import (
     InsightItem,
     InsightsResponse,
+    FileAnalysisResponse,
     TransactionCreate,
     TransactionParseRequest,
     TransactionParseResponse,
@@ -100,6 +102,29 @@ async def parse_transaction(
         {"category": parsed.category, "type": parsed.type},
     )
     return parsed
+
+
+@router.post("/analyze-file", response_model=FileAnalysisResponse)
+async def analyze_transactions_file(
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_session),
+    user_id: int = Depends(get_current_user_from_token),
+):
+    try:
+        file_bytes = await file.read()
+        analysis = await parse_transactions_file(file_bytes, file.filename or "")
+        await safe_log_event(
+            db,
+            user_id,
+            "transaction_file_analyzed",
+            {"filename": file.filename, "transaction_count": len(analysis.transactions)},
+        )
+        return analysis
+    except ValueError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(error),
+        ) from error
 
 
 @router.get("/insights", response_model=InsightsResponse)
