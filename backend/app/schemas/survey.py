@@ -6,6 +6,7 @@ from typing import Optional, List
 class SurveyBase(BaseModel):
     age: int = Field(..., description="Age of the user", example=0)
     capital: float = Field(..., ge=0, description="Available capital", example=0)
+    capital_currency: str = Field(default="PLN", min_length=3, max_length=3, description="Currency of available capital", example="PLN")
     skills: List[str] = Field(..., min_items=1, description="User skills", example=["string"])
     financial_goal: str = Field(..., description="Financial goal", example="string")
 
@@ -26,6 +27,10 @@ class SurveyBase(BaseModel):
             raise ValueError("Skills must be a non-empty list")
         return v
 
+    @field_validator("capital_currency")
+    def validate_capital_currency(cls, v):
+        return v.strip().upper()
+
     @field_validator("sport_type", mode="before")
     def validate_sport_type(cls, v, info):
         sport = info.data.get("sport")
@@ -41,6 +46,7 @@ class SurveyCreate(SurveyBase):
 class SurveyUpdate(BaseModel):
     age: Optional[int] = None
     capital: Optional[float] = Field(None, ge=0)
+    capital_currency: Optional[str] = Field(default=None, min_length=3, max_length=3)
     skills: Optional[List[str]] = None
     financial_goal: Optional[str] = None
     sport: Optional[bool] = None
@@ -58,6 +64,12 @@ class SurveyUpdate(BaseModel):
         if v is not None and not v:
             raise ValueError("Skills must be a non-empty list")
         return v
+
+    @field_validator("capital_currency")
+    def validate_capital_currency(cls, v):
+        if v is None:
+            return v
+        return v.strip().upper()
 
     @field_validator("sport_type", mode="before")
     def validate_sport_type(cls, v, info):

@@ -27,7 +27,7 @@ CATEGORY_KEYWORDS = {
 }
 
 INCOME_KEYWORDS = [
-    "salary", "bonus", "freelance", "invoice", "earned", "received", "income",
+    "salary", "bonus", "freelance", "invoice", "earned", "received", "income", "earn"
     "profit", "revenue", "sold", "sale", "refund", "paycheck", "got paid",
     "заробив", "отримав", "дохід", "прибут", "зарплат", "гонорар", "продав", "виплата",
 ]

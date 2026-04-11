@@ -61,6 +61,7 @@ const registerPasswordInput = document.getElementById("register-password");
 
 const surveyAgeInput = document.getElementById("survey-age");
 const surveyCapitalInput = document.getElementById("survey-capital");
+const surveyCapitalCurrencyInput = document.getElementById("survey-capital-currency");
 const surveySkillsInput = document.getElementById("survey-skills");
 const surveyFinancialGoalInput = document.getElementById("survey-financial-goal");
 const surveySportInput = document.getElementById("survey-sport");
@@ -376,6 +377,7 @@ function fillSurveyForm(survey) {
 
     surveyAgeInput.value = survey.age || "";
     surveyCapitalInput.value = survey.capital || "";
+    surveyCapitalCurrencyInput.value = survey.capital_currency || "PLN";
     surveySkillsInput.value = Array.isArray(survey.skills) ? survey.skills.join(", ") : "";
     surveyFinancialGoalInput.value = survey.financial_goal || "";
     surveySportInput.checked = Boolean(survey.sport);
@@ -483,6 +485,7 @@ function collectSurveyPayload() {
     return {
         age: Number(surveyAgeInput.value),
         capital: Number(surveyCapitalInput.value),
+        capital_currency: surveyCapitalCurrencyInput.value,
         skills: surveySkillsInput.value
             .split(",")
             .map((item) => item.trim())

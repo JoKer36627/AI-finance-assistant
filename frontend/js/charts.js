@@ -1,12 +1,10 @@
 function drawCharts(list, pieChartCanvas, barChartCanvas, activeTypeFilter = "all") {
-    drawPieChart(list, pieChartCanvas, activeTypeFilter);
+    drawPieChart(list, pieChartCanvas);
     drawBarChart(list, barChartCanvas, activeTypeFilter);
 }
 
-function getTotalsByCategory(list, activeTypeFilter = "all") {
-    const filteredTransactions = activeTypeFilter === "all"
-        ? list
-        : list.filter((t) => t.type === activeTypeFilter);
+function getTotalsByCategory(list) {
+    const filteredTransactions = list.filter((t) => t.type === "expense");
 
     return filteredTransactions.reduce((acc, transaction) => {
         const category = transaction.category;
@@ -45,23 +43,18 @@ function drawEmptyState(ctx, canvas, message) {
     ctx.textAlign = "start";
 }
 
-function drawPieChart(list, pieChartCanvas, activeTypeFilter = "all") {
+function drawPieChart(list, pieChartCanvas) {
     if (!pieChartCanvas) {
         return;
     }
 
     const ctx = pieChartCanvas.getContext("2d");
-    const categoryTotals = getTotalsByCategory(list, activeTypeFilter);
+    const categoryTotals = getTotalsByCategory(list);
     const entries = Object.entries(categoryTotals);
-    const chartTitle =
-        activeTypeFilter === "income"
-            ? "Income by category"
-            : activeTypeFilter === "expense"
-              ? "Expenses by category"
-              : "Transactions by category";
+    const chartTitle = "Expenses by category";
 
     if (entries.length === 0) {
-        drawEmptyState(ctx, pieChartCanvas, `No ${activeTypeFilter === "all" ? "transaction" : activeTypeFilter} data for pie chart`);
+        drawEmptyState(ctx, pieChartCanvas, "No expense data for pie chart");
         return;
     }
 
