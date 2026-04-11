@@ -609,8 +609,8 @@ textarea:focus {
 
 .chart-panel {
     background: rgba(255, 255, 255, 0.95);
-    position: relative;
-    min-height: 420px;
+    display: flex;
+    flex-direction: column;
 }
 
 .chart-panel-wide {
@@ -854,18 +854,25 @@ td {
     font-size: 1.1rem;
 }
 
-.chart-panel canvas {
+.chart-stage {
+    position: relative;
+    width: 100%;
+    flex: 0 0 auto;
+}
+
+.chart-stage-line,
+.chart-stage-bar {
+    height: 320px;
+}
+
+.chart-stage-pie {
+    height: 320px;
+}
+
+.chart-stage canvas {
     display: block;
     width: 100% !important;
-}
-
-#line-chart,
-#bar-chart {
-    height: 320px !important;
-}
-
-#pie-chart {
-    height: 320px !important;
+    height: 100% !important;
 }
 
 .toast {
