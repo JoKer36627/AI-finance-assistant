@@ -130,6 +130,7 @@ class PeriodBreakdownItem(BaseModel):
 
 class TransactionSummaryResponse(BaseModel):
     balance: Decimal
+    starting_balance: Decimal = Decimal("0")
     income_total: Decimal
     expense_total: Decimal
     base_currency: str = "PLN"

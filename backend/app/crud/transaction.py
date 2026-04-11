@@ -5,7 +5,8 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.currency import convert_to_pln
+from app.core.currency import convert_from_pln, convert_to_pln
+from app.models.survey import SurveyResult
 from app.models.transaction import Transaction
 from app.schemas.transaction import (
     CategoryBreakdownItem,
@@ -94,11 +95,29 @@ async def delete_transaction(db: AsyncSession, user_id: int, transaction_id: int
     await db.commit()
 
 
+async def get_tracker_currency_and_starting_balance(
+    db: AsyncSession,
+    user_id: int,
+) -> tuple[Decimal, str]:
+    result = await db.execute(select(SurveyResult).where(SurveyResult.user_id == user_id))
+    survey = result.scalars().first()
+    if not survey or not survey.answers:
+        return Decimal("0"), "PLN"
+
+    answers = survey.answers
+    tracker_currency = str(answers.get("capital_currency") or "PLN").strip().upper() or "PLN"
+    capital = Decimal(str(answers.get("capital") or 0))
+    return capital, tracker_currency
+
+
 async def build_summary(db: AsyncSession, user_id: int) -> TransactionSummaryResponse:
     transactions = await get_transactions_by_user(db, user_id)
+    starting_balance, tracker_currency = await get_tracker_currency_and_starting_balance(
+        db, user_id
+    )
 
-    income_total = Decimal("0")
-    expense_total = Decimal("0")
+    income_total_pln = Decimal("0")
+    expense_total_pln = Decimal("0")
     category_totals: dict[str, Decimal] = defaultdict(lambda: Decimal("0"))
     period_totals: dict[str, dict[str, Decimal]] = defaultdict(
         lambda: {"income": Decimal("0"), "expense": Decimal("0")}
@@ -109,29 +128,76 @@ async def build_summary(db: AsyncSession, user_id: int) -> TransactionSummaryRes
         period_key = transaction.transaction_date.strftime("%Y-%m")
 
         if transaction.type == "income":
-            income_total += amount
+            income_total_pln += amount
         else:
-            expense_total += amount
+            expense_total_pln += amount
             category_totals[transaction.category] += amount
 
         period_totals[period_key][transaction.type] += amount
 
-    category_breakdown = [
-        CategoryBreakdownItem(category=category, amount=amount)
+    starting_balance_pln, _, tracker_currency = await convert_to_pln(
+        starting_balance,
+        tracker_currency,
+    )
+    balance_pln = starting_balance_pln + income_total_pln - expense_total_pln
+
+    if tracker_currency == "PLN":
+        summary_balance = balance_pln
+        summary_starting_balance = starting_balance
+        summary_income_total = income_total_pln
+        summary_expense_total = expense_total_pln
+        category_breakdown = [
+            CategoryBreakdownItem(category=category, amount=amount)
+            for category, amount in sorted(
+                category_totals.items(), key=lambda item: item[1], reverse=True
+            )
+        ]
+        period_breakdown = [
+            PeriodBreakdownItem(period=period, income=totals["income"], expense=totals["expense"])
+            for period, totals in sorted(period_totals.items())
+        ]
+    else:
+        summary_balance, _, _ = await convert_from_pln(balance_pln, tracker_currency)
+        summary_starting_balance, _, _ = await convert_from_pln(
+            starting_balance_pln,
+            tracker_currency,
+        )
+        summary_income_total, _, _ = await convert_from_pln(
+            income_total_pln,
+            tracker_currency,
+        )
+        summary_expense_total, _, _ = await convert_from_pln(
+            expense_total_pln,
+            tracker_currency,
+        )
+        category_breakdown = []
         for category, amount in sorted(
             category_totals.items(), key=lambda item: item[1], reverse=True
-        )
-    ]
-    period_breakdown = [
-        PeriodBreakdownItem(period=period, income=totals["income"], expense=totals["expense"])
-        for period, totals in sorted(period_totals.items())
-    ]
+        ):
+            converted_amount, _, _ = await convert_from_pln(amount, tracker_currency)
+            category_breakdown.append(
+                CategoryBreakdownItem(category=category, amount=converted_amount)
+            )
+        period_breakdown = []
+        for period, totals in sorted(period_totals.items()):
+            converted_income, _, _ = await convert_from_pln(totals["income"], tracker_currency)
+            converted_expense, _, _ = await convert_from_pln(
+                totals["expense"], tracker_currency
+            )
+            period_breakdown.append(
+                PeriodBreakdownItem(
+                    period=period,
+                    income=converted_income,
+                    expense=converted_expense,
+                )
+            )
 
     return TransactionSummaryResponse(
-        balance=income_total - expense_total,
-        income_total=income_total,
-        expense_total=expense_total,
-        base_currency="PLN",
+        balance=summary_balance,
+        starting_balance=summary_starting_balance,
+        income_total=summary_income_total,
+        expense_total=summary_expense_total,
+        base_currency=tracker_currency,
         category_breakdown=category_breakdown,
         period_breakdown=period_breakdown,
         transaction_count=len(transactions),

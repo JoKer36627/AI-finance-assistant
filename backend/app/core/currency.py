@@ -72,3 +72,20 @@ async def convert_to_pln(
     amount_decimal = Decimal(str(amount))
     converted_amount = quantize_money(amount_decimal * rate)
     return converted_amount, rate, normalized_currency
+
+
+async def convert_from_pln(
+    amount: Decimal,
+    currency: str,
+    transaction_date: datetime | date | None = None,
+) -> tuple[Decimal, Decimal, str]:
+    normalized_currency = normalize_currency(currency)
+    amount_decimal = Decimal(str(amount))
+    if normalized_currency == PLN:
+        return quantize_money(amount_decimal), Decimal("1"), normalized_currency
+
+    rate_to_pln = await fetch_rate_to_pln(normalized_currency, transaction_date)
+    if rate_to_pln <= 0:
+        rate_to_pln = Decimal("1")
+    converted_amount = quantize_money(amount_decimal / rate_to_pln)
+    return converted_amount, rate_to_pln, normalized_currency

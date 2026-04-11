@@ -123,7 +123,7 @@ async def get_transaction_insights(
                     title="Top expense category",
                     message=(
                         f"Most of your expense volume is in {top_category.category} "
-                        f"with {top_category.amount} PLN tracked so far."
+                        f"with {top_category.amount} {summary.base_currency} tracked so far."
                     ),
                 )
             )

@@ -125,6 +125,10 @@ function formatMoney(value, currency = "PLN") {
     return `${numericValue.toFixed(2)} ${currency}`;
 }
 
+function getTrackerCurrency() {
+    return authState.survey?.capital_currency || "PLN";
+}
+
 function toInputDate(value) {
     const date = value ? new Date(value) : new Date();
     const year = date.getFullYear();
@@ -140,7 +144,7 @@ function toTransactionPayload(source = "manual") {
         type: typeInput.value,
         category: categoryInput.value,
         transaction_date: new Date(`${dateInput.value}T12:00:00`).toISOString(),
-        currency: "PLN",
+        currency: getTrackerCurrency(),
         source
     };
 }
@@ -362,7 +366,9 @@ async function loadDashboardData() {
     renderSummary(summary);
     renderInsights(insights.insights || []);
     applyFilters();
-    setStatus(`Loaded ${transactions.length} transaction(s).`);
+    setStatus(
+        `Loaded ${transactions.length} transaction(s). Tracker currency: ${summary.base_currency || getTrackerCurrency()}. Starting balance: ${formatMoney(summary.starting_balance || 0, summary.base_currency || getTrackerCurrency())}.`
+    );
 }
 
 async function refreshAppData() {
