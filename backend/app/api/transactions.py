@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.currency import convert_to_pln
@@ -62,18 +62,20 @@ async def create_transaction(
 
 @router.get("/me", response_model=list[TransactionRead])
 async def get_my_transactions(
+    period: str = Query(default="month"),
     db: AsyncSession = Depends(get_session),
     user_id: int = Depends(get_current_user_from_token),
 ):
-    return await crud_transaction.get_transactions_by_user(db, user_id)
+    return await crud_transaction.get_transactions_by_user(db, user_id, period)
 
 
 @router.get("/summary", response_model=TransactionSummaryResponse)
 async def get_transactions_summary(
+    period: str = Query(default="month"),
     db: AsyncSession = Depends(get_session),
     user_id: int = Depends(get_current_user_from_token),
 ):
-    return await crud_transaction.build_summary(db, user_id)
+    return await crud_transaction.build_summary(db, user_id, period)
 
 
 @router.post("/parse-text", response_model=TransactionParseResponse)
@@ -102,10 +104,11 @@ async def parse_transaction(
 
 @router.get("/insights", response_model=InsightsResponse)
 async def get_transaction_insights(
+    period: str = Query(default="month"),
     db: AsyncSession = Depends(get_session),
     user_id: int = Depends(get_current_user_from_token),
 ):
-    summary = await crud_transaction.build_summary(db, user_id)
+    summary = await crud_transaction.build_summary(db, user_id, period)
     insights: list[InsightItem] = []
 
     if summary.transaction_count == 0:

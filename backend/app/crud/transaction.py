@@ -1,4 +1,5 @@
 from collections import defaultdict
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from fastapi import HTTPException, status
@@ -11,10 +12,50 @@ from app.models.transaction import Transaction
 from app.schemas.transaction import (
     CategoryBreakdownItem,
     PeriodBreakdownItem,
+    SUMMARY_PERIODS,
     TransactionCreate,
     TransactionSummaryResponse,
     TransactionUpdate,
 )
+
+
+def _validate_period(period: str) -> str:
+    normalized = (period or "month").strip().lower()
+    if normalized not in SUMMARY_PERIODS:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Invalid summary period",
+        )
+    return normalized
+
+
+def _get_period_range(period: str) -> tuple[datetime, datetime]:
+    now = datetime.now().astimezone()
+    end = now
+
+    if period == "day":
+        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    elif period == "week":
+        start = (now - timedelta(days=now.weekday())).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+    elif period == "year":
+        start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+    else:
+        start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    return start, end
+
+
+def _format_period_label(dt: datetime, period: str) -> tuple[str, str]:
+    local_dt = dt.astimezone()
+    if period == "day":
+        return local_dt.strftime("%Y-%m-%d-%H"), local_dt.strftime("%H:%M")
+    if period == "week":
+        return local_dt.strftime("%Y-%m-%d"), local_dt.strftime("%a")
+    if period == "year":
+        return local_dt.strftime("%Y-%m"), local_dt.strftime("%b")
+    return local_dt.strftime("%Y-%m-%d"), local_dt.strftime("%d %b")
 
 
 async def create_transaction(
@@ -39,12 +80,26 @@ async def create_transaction(
     return db_transaction
 
 
-async def get_transactions_by_user(db: AsyncSession, user_id: int) -> list[Transaction]:
-    result = await db.execute(
+async def get_transactions_by_user(
+    db: AsyncSession,
+    user_id: int,
+    period: str | None = None,
+) -> list[Transaction]:
+    query = (
         select(Transaction)
         .where(Transaction.user_id == user_id)
         .order_by(Transaction.transaction_date.desc(), Transaction.created_at.desc())
     )
+
+    if period:
+        selected_period = _validate_period(period)
+        start, end = _get_period_range(selected_period)
+        query = query.where(
+            Transaction.transaction_date >= start,
+            Transaction.transaction_date <= end,
+        )
+
+    result = await db.execute(query)
     return list(result.scalars().all())
 
 
@@ -110,8 +165,13 @@ async def get_tracker_currency_and_starting_balance(
     return capital, tracker_currency
 
 
-async def build_summary(db: AsyncSession, user_id: int) -> TransactionSummaryResponse:
-    transactions = await get_transactions_by_user(db, user_id)
+async def build_summary(
+    db: AsyncSession,
+    user_id: int,
+    period: str = "month",
+) -> TransactionSummaryResponse:
+    selected_period = _validate_period(period)
+    transactions = await get_transactions_by_user(db, user_id, selected_period)
     starting_balance, tracker_currency = await get_tracker_currency_and_starting_balance(
         db, user_id
     )
@@ -119,13 +179,16 @@ async def build_summary(db: AsyncSession, user_id: int) -> TransactionSummaryRes
     income_total_pln = Decimal("0")
     expense_total_pln = Decimal("0")
     category_totals: dict[str, Decimal] = defaultdict(lambda: Decimal("0"))
-    period_totals: dict[str, dict[str, Decimal]] = defaultdict(
-        lambda: {"income": Decimal("0"), "expense": Decimal("0")}
+    period_totals: dict[str, dict[str, Decimal | str]] = defaultdict(
+        lambda: {"income": Decimal("0"), "expense": Decimal("0"), "label": ""}
     )
 
     for transaction in transactions:
         amount = Decimal(str(transaction.amount_pln))
-        period_key = transaction.transaction_date.strftime("%Y-%m")
+        period_key, label = _format_period_label(
+            transaction.transaction_date,
+            selected_period,
+        )
 
         if transaction.type == "income":
             income_total_pln += amount
@@ -134,6 +197,7 @@ async def build_summary(db: AsyncSession, user_id: int) -> TransactionSummaryRes
             category_totals[transaction.category] += amount
 
         period_totals[period_key][transaction.type] += amount
+        period_totals[period_key]["label"] = label
 
     starting_balance_pln, _, tracker_currency = await convert_to_pln(
         starting_balance,
@@ -153,8 +217,13 @@ async def build_summary(db: AsyncSession, user_id: int) -> TransactionSummaryRes
             )
         ]
         period_breakdown = [
-            PeriodBreakdownItem(period=period, income=totals["income"], expense=totals["expense"])
-            for period, totals in sorted(period_totals.items())
+            PeriodBreakdownItem(
+                period=period_key,
+                label=str(totals["label"]),
+                income=totals["income"],
+                expense=totals["expense"],
+            )
+            for period_key, totals in sorted(period_totals.items())
         ]
     else:
         summary_balance, _, _ = await convert_from_pln(balance_pln, tracker_currency)
@@ -179,14 +248,17 @@ async def build_summary(db: AsyncSession, user_id: int) -> TransactionSummaryRes
                 CategoryBreakdownItem(category=category, amount=converted_amount)
             )
         period_breakdown = []
-        for period, totals in sorted(period_totals.items()):
-            converted_income, _, _ = await convert_from_pln(totals["income"], tracker_currency)
+        for period_key, totals in sorted(period_totals.items()):
+            converted_income, _, _ = await convert_from_pln(
+                totals["income"], tracker_currency
+            )
             converted_expense, _, _ = await convert_from_pln(
                 totals["expense"], tracker_currency
             )
             period_breakdown.append(
                 PeriodBreakdownItem(
-                    period=period,
+                    period=period_key,
+                    label=str(totals["label"]),
                     income=converted_income,
                     expense=converted_expense,
                 )
@@ -198,6 +270,7 @@ async def build_summary(db: AsyncSession, user_id: int) -> TransactionSummaryRes
         income_total=summary_income_total,
         expense_total=summary_expense_total,
         base_currency=tracker_currency,
+        selected_period=selected_period,
         category_breakdown=category_breakdown,
         period_breakdown=period_breakdown,
         transaction_count=len(transactions),

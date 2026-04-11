@@ -1,7 +1,7 @@
 import asyncio
 import json
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 
 import openai
@@ -14,22 +14,46 @@ from app.schemas.transaction import (
 
 
 CATEGORY_KEYWORDS = {
-    "food": ["food", "coffee", "groceries", "grocery", "restaurant", "cafe", "lunch", "dinner", "breakfast", "produk", "продукт", "кава", "кав", "їжа"],
-    "transport": ["taxi", "uber", "bolt", "bus", "train", "fuel", "metro", "tram", "таксі", "транспорт", "паливо"],
-    "housing": ["rent", "mortgage", "housing", "apartment", "flat", "оренда", "квартира"],
-    "bills": ["bill", "internet", "phone", "electricity", "water", "gas", "subscription", "рахунок", "комунал", "інтернет"],
-    "entertainment": ["movie", "cinema", "game", "netflix", "spotify", "concert", "розваг", "кіно"],
-    "shopping": ["shopping", "clothes", "amazon", "store", "shirt", "shoes", "покуп", "одяг"],
-    "health": ["doctor", "medicine", "pharmacy", "gym", "health", "лікар", "аптек", "здоров"],
-    "education": ["course", "book", "education", "tuition", "study", "курс", "книга", "навчан"],
-    "salary": ["salary", "payroll", "wage", "зарплат"],
-    "freelance": ["freelance", "invoice", "client", "project", "upwork", "fiverr", "клієнт", "фриланс", "фріланс", "замовник"],
+    "food": [
+        "food", "coffee", "groceries", "grocery", "restaurant", "cafe", "lunch", "dinner", "breakfast",
+        "snack", "brunch", "delivery", "takeout", "produk", "продукт", "кава", "кав", "їжа", "суші",
+        "піц", "pizza", "burger", "бар", "кафе", "обід", "вечеря"
+    ],
+    "transport": [
+        "taxi", "uber", "bolt", "bus", "train", "fuel", "metro", "tram", "parking", "car wash", "diesel",
+        "petrol", "gasoline", "таксі", "транспорт", "паливо", "бензин", "парков", "проїзд", "автобус"
+    ],
+    "housing": [
+        "rent", "mortgage", "housing", "apartment", "flat", "deposit", "оренда", "квартира", "житло", "іпотека"
+    ],
+    "bills": [
+        "bill", "internet", "phone", "electricity", "water", "gas", "subscription", "utility", "utilities",
+        "рахунок", "комунал", "інтернет", "світло", "вода", "газ", "мобільний"
+    ],
+    "entertainment": [
+        "movie", "cinema", "game", "netflix", "spotify", "concert", "party", "bar", "club", "розваг", "кіно", "ігри"
+    ],
+    "shopping": [
+        "shopping", "clothes", "amazon", "store", "shirt", "shoes", "mall", "ikea", "покуп", "одяг", "взуття", "магазин"
+    ],
+    "health": [
+        "doctor", "medicine", "pharmacy", "gym", "health", "therapy", "dentist", "лікар", "аптек", "здоров", "зал", "спортзал"
+    ],
+    "education": [
+        "course", "book", "education", "tuition", "study", "lesson", "workshop", "курс", "книга", "навчан", "урок"
+    ],
+    "salary": ["salary", "payroll", "wage", "зарплат", "salary payment", "заробітна плата"],
+    "freelance": [
+        "freelance", "invoice", "client", "project", "upwork", "fiverr", "side job", "gig",
+        "клієнт", "фриланс", "фріланс", "замовник", "проєкт", "підробіток"
+    ],
 }
 
 INCOME_KEYWORDS = [
-    "salary", "bonus", "freelance", "invoice", "earned", "received", "income", "earn"
-    "profit", "revenue", "sold", "sale", "refund", "paycheck", "got paid",
-    "заробив", "отримав", "дохід", "прибут", "зарплат", "гонорар", "продав", "виплата",
+    "salary", "bonus", "freelance", "invoice", "earned", "received", "income", "earn",
+    "profit", "revenue", "sold", "sale", "refund", "paycheck", "got paid", "payout",
+    "cashback", "returned", "заробив", "отримав", "дохід", "прибут", "зарплат",
+    "гонорар", "продав", "виплата", "повернули", "кешбек", "переказали", "зайшло",
 ]
 
 PARSER_SYSTEM_PROMPT = """
@@ -45,7 +69,7 @@ You must strictly follow these rules:
 - currency (default PLN if not specified)
 - category (choose ONLY from the allowed list)
 - short note (what the transaction is about)
-- date (use today's date if not specified)
+- date (support relative references like today, yesterday, last week; use today's date only if not specified)
 
 2. Allowed categories:
 - food
@@ -64,9 +88,25 @@ You must strictly follow these rules:
 - make the BEST reasonable assumption
 - NEVER return null unless absolutely impossible
 
-4. Output format MUST be valid JSON only.
+4. Understand informal language, slang, mixed Ukrainian/Polish/English phrasing, and shorthand notes.
+
+5. Output format MUST be valid JSON only.
 NO text explanation. NO comments.
 """
+
+RELATIVE_DAY_KEYWORDS = {
+    "today": 0,
+    "сьогодні": 0,
+    "today.": 0,
+    "yesterday": -1,
+    "вчора": -1,
+    "yday": -1,
+    "day before yesterday": -2,
+    "the day before yesterday": -2,
+    "позавчора": -2,
+    "tomorrow": 1,
+    "завтра": 1,
+}
 
 
 def _normalize_whitespace(text: str) -> str:
@@ -97,6 +137,36 @@ def _detect_currency(text: str) -> str:
     if "pln" in lowered or "zł" in lowered or "zl" in lowered or "злот" in lowered:
         return "PLN"
     return "PLN"
+
+
+def _parse_relative_date(text: str) -> datetime:
+    lowered = text.lower()
+    now = datetime.now().astimezone()
+
+    for phrase, offset in sorted(RELATIVE_DAY_KEYWORDS.items(), key=lambda item: len(item[0]), reverse=True):
+        if phrase in lowered:
+            return (now + timedelta(days=offset)).replace(hour=12, minute=0, second=0, microsecond=0)
+
+    if "last week" in lowered or "минулого тижня" in lowered:
+        return (now - timedelta(days=7)).replace(hour=12, minute=0, second=0, microsecond=0)
+    if "this week" in lowered or "цього тижня" in lowered:
+        return now.replace(hour=12, minute=0, second=0, microsecond=0)
+    if "last month" in lowered or "минулого місяця" in lowered:
+        return (now - timedelta(days=30)).replace(hour=12, minute=0, second=0, microsecond=0)
+
+    iso_match = re.search(r"\b(20\d{2}-\d{2}-\d{2})\b", text)
+    if iso_match:
+        parsed = datetime.fromisoformat(iso_match.group(1))
+        return parsed.replace(hour=12, minute=0, second=0, microsecond=0, tzinfo=now.tzinfo)
+
+    numeric_match = re.search(r"\b(\d{1,2})[./-](\d{1,2})(?:[./-](20\d{2}))?\b", text)
+    if numeric_match:
+        day = int(numeric_match.group(1))
+        month = int(numeric_match.group(2))
+        year = int(numeric_match.group(3) or now.year)
+        return datetime(year, month, day, 12, 0, tzinfo=now.tzinfo)
+
+    return now.replace(hour=12, minute=0, second=0, microsecond=0)
 
 
 def _detect_type(text: str) -> str:
@@ -137,6 +207,10 @@ def _build_note(text: str, amount: Decimal) -> str:
     return cleaned[:120] or "Parsed from AI input"
 
 
+def _clean_text_for_category(text: str) -> str:
+    return re.sub(r"\s+", " ", text.lower()).strip()
+
+
 def parse_transaction_text_local(text: str) -> TransactionParseResponse:
     normalized_text = _normalize_whitespace(text)
     amount = _extract_amount(normalized_text)
@@ -144,7 +218,7 @@ def parse_transaction_text_local(text: str) -> TransactionParseResponse:
         raise ValueError("Could not detect a valid transaction amount")
 
     transaction_type = _detect_type(normalized_text)
-    category = _detect_category(normalized_text, transaction_type)
+    category = _detect_category(_clean_text_for_category(normalized_text), transaction_type)
 
     return TransactionParseResponse(
         type=transaction_type,
@@ -152,9 +226,9 @@ def parse_transaction_text_local(text: str) -> TransactionParseResponse:
         currency=_detect_currency(normalized_text),
         category=category if category in TRANSACTION_CATEGORIES else "other",
         note=_build_note(normalized_text, amount),
-        transaction_date=datetime.now(timezone.utc),
+        transaction_date=_parse_relative_date(normalized_text).astimezone(timezone.utc),
         source="ai_text",
-        confidence=0.64,
+        confidence=0.7,
     )
 
 
@@ -172,6 +246,9 @@ async def parse_transaction_text_with_llm(text: str) -> TransactionParseResponse
         '  "note": "coffee",\n'
         f'  "date": "{today}"\n'
         "}\n\n"
+        "Relative date examples:\n"
+        "\"I bought coffee yesterday\" => date should be yesterday\n"
+        "\"заробив на фрілансі позавчора\" => date should be the day before yesterday\n\n"
         "Now process the user's input.\n\n"
         f"User input: {text}"
     )

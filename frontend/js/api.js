@@ -121,8 +121,8 @@ const surveyApi = {
 };
 
 const transactionsApi = {
-    getMine() {
-        return apiRequest("/transactions/me");
+    getMine(period = "month") {
+        return apiRequest(`/transactions/me?period=${encodeURIComponent(period)}`);
     },
 
     create(payload) {
@@ -145,8 +145,8 @@ const transactionsApi = {
         });
     },
 
-    getSummary() {
-        return apiRequest("/transactions/summary");
+    getSummary(period = "month") {
+        return apiRequest(`/transactions/summary?period=${encodeURIComponent(period)}`);
     },
 
     parseText(payload) {
@@ -156,8 +156,8 @@ const transactionsApi = {
         });
     },
 
-    getInsights() {
-        return apiRequest("/transactions/insights");
+    getInsights(period = "month") {
+        return apiRequest(`/transactions/insights?period=${encodeURIComponent(period)}`);
     }
 };
 

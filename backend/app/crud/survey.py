@@ -53,8 +53,10 @@ async def update_survey(db: AsyncSession, user_id: int, survey_update: SurveyUpd
         raise HTTPException(status_code=422, detail="Capital must be >= 0")
     if "skills" in update_data and not update_data["skills"]:
         raise HTTPException(status_code=422, detail="Skills must be a non-empty list")
-    if update_data.get("sport") and not update_data.get("sport_type"):
-        raise HTTPException(status_code=422, detail="sport_type is required if sport=True")
+    if "financial_goal" in update_data and not str(update_data["financial_goal"]).strip():
+        raise HTTPException(status_code=422, detail="financial_goal must not be empty")
+    if "tracker_goal" in update_data and not str(update_data["tracker_goal"]).strip():
+        raise HTTPException(status_code=422, detail="tracker_goal must not be empty")
 
     current_data = survey.answers or {}
     current_data.update(update_data)

@@ -1,5 +1,7 @@
 from datetime import datetime
-from pydantic import BaseModel, EmailStr
+import re
+
+from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional
 
 
@@ -13,6 +15,20 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
 
+    @field_validator("password")
+    def validate_password(cls, value: str) -> str:
+        if len(value) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        if not re.search(r"[A-Z]", value):
+            raise ValueError("Password must include at least one uppercase letter")
+        if not re.search(r"[a-z]", value):
+            raise ValueError("Password must include at least one lowercase letter")
+        if not re.search(r"\d", value):
+            raise ValueError("Password must include at least one number")
+        if not re.search(r"[^A-Za-z0-9]", value):
+            raise ValueError("Password must include at least one special character")
+        return value
+
 
 # ---- Login ----
 class UserLogin(BaseModel):
@@ -24,6 +40,22 @@ class UserLogin(BaseModel):
 class UserUpdate(BaseModel):
     name: Optional[str] = None
     password: Optional[str] = None
+
+    @field_validator("password")
+    def validate_password(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        if len(value) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        if not re.search(r"[A-Z]", value):
+            raise ValueError("Password must include at least one uppercase letter")
+        if not re.search(r"[a-z]", value):
+            raise ValueError("Password must include at least one lowercase letter")
+        if not re.search(r"\d", value):
+            raise ValueError("Password must include at least one number")
+        if not re.search(r"[^A-Za-z0-9]", value):
+            raise ValueError("Password must include at least one special character")
+        return value
 
 
 # ---- Response ----

@@ -112,10 +112,21 @@
                         <label>
                             Password
                             <input type="password" id="register-password" required placeholder="Create a password">
+                            <small class="helper-text">At least 8 characters, with uppercase, lowercase, number, and special symbol.</small>
                         </label>
                         <button type="submit" class="primary-btn full-width">Create account</button>
                         <button type="button" id="switch-to-login" class="ghost-btn full-width">Already have an account? Login</button>
                     </form>
+
+                    <div id="verify-panel" class="stack-form hidden">
+                        <label>
+                            Verification token
+                            <input type="text" id="verify-token" readonly>
+                            <small class="helper-text">For now this prototype verifies прямо у фронті. Натисни кнопку нижче, щоб активувати акаунт.</small>
+                        </label>
+                        <button type="button" id="verify-account-btn" class="primary-btn full-width">Verify account</button>
+                        <button type="button" id="back-to-login-btn" class="ghost-btn full-width">Back to login</button>
+                    </div>
                 </div>
             </section>
 
@@ -154,13 +165,9 @@
                             Financial goal
                             <input type="text" id="survey-financial-goal" placeholder="Build emergency fund" required>
                         </label>
-                        <label class="checkbox-row">
-                            <input type="checkbox" id="survey-sport">
-                            I actively do sport
-                        </label>
-                        <label>
-                            Sport type
-                            <input type="text" id="survey-sport-type" placeholder="Running">
+                        <label class="full-span">
+                            Why are you using this tracker?
+                            <input type="text" id="survey-tracker-goal" placeholder="Control daily spending and save more consciously" required>
                         </label>
                         <label class="full-span">
                             Non-financial goal
@@ -215,6 +222,18 @@
                             </div>
 
                             <section class="summary-section">
+                                <div class="summary-toolbar">
+                                    <div>
+                                        <p class="eyebrow">View range</p>
+                                        <h3>Focus period</h3>
+                                    </div>
+                                    <select id="period-filter" class="period-select">
+                                        <option value="day">Day</option>
+                                        <option value="week">Week</option>
+                                        <option value="month" selected>Month</option>
+                                        <option value="year">Year</option>
+                                    </select>
+                                </div>
                                 <article class="summary-card metric-card">
                                     <h3>Balance</h3>
                                     <p id="balance">0.00 PLN</p>

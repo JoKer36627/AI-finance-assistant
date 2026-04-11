@@ -31,7 +31,7 @@ function buildBalanceTrendSeries(summary) {
 
     periods.forEach((period) => {
         runningBalance += Number(period.income || 0) - Number(period.expense || 0);
-        labels.push(period.period);
+        labels.push(period.label || period.period);
         values.push(runningBalance);
     });
 
@@ -40,7 +40,7 @@ function buildBalanceTrendSeries(summary) {
 
 function buildCashFlowSeries(summary, activeTypeFilter = "all") {
     const periods = summary?.period_breakdown || [];
-    const labels = periods.map((period) => period.period);
+    const labels = periods.map((period) => period.label || period.period);
 
     const datasets = [];
     if (activeTypeFilter === "all" || activeTypeFilter === "income") {

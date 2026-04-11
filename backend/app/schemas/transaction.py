@@ -20,6 +20,7 @@ TRANSACTION_CATEGORIES = [
 ]
 
 TRANSACTION_SOURCES = ["manual", "ai_text", "future_bank_import"]
+SUMMARY_PERIODS = ["day", "week", "month", "year"]
 
 
 class TransactionBase(BaseModel):
@@ -124,6 +125,7 @@ class CategoryBreakdownItem(BaseModel):
 
 class PeriodBreakdownItem(BaseModel):
     period: str
+    label: str
     income: Decimal
     expense: Decimal
 
@@ -134,6 +136,7 @@ class TransactionSummaryResponse(BaseModel):
     income_total: Decimal
     expense_total: Decimal
     base_currency: str = "PLN"
+    selected_period: Literal["day", "week", "month", "year"] = "month"
     category_breakdown: list[CategoryBreakdownItem]
     period_breakdown: list[PeriodBreakdownItem]
     transaction_count: int

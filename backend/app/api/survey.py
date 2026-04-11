@@ -12,6 +12,13 @@ from app.schemas.event import EventCreate
 router = APIRouter(prefix="/survey", tags=["survey"])
 
 
+def normalize_survey_answers(answers: dict | None) -> dict:
+    payload = dict(answers or {})
+    payload.setdefault("capital_currency", "PLN")
+    payload.setdefault("tracker_goal", payload.get("financial_goal") or "Understand and improve my money habits")
+    return payload
+
+
 async def safe_create_survey_event(db: AsyncSession, user_id: int, source: str):
     try:
         await create_event(
@@ -56,7 +63,7 @@ async def read_my_survey(
         id=db_survey.id,
         user_id=user_id,
         created_at=db_survey.created_at,
-        **db_survey.answers
+        **normalize_survey_answers(db_survey.answers)
     )
 
 
@@ -73,5 +80,5 @@ async def update_my_survey(
         id=db_survey.id,
         user_id=db_survey.user_id,
         created_at=db_survey.created_at,
-        **db_survey.answers
+        **normalize_survey_answers(db_survey.answers)
     )

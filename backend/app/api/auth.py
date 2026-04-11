@@ -49,7 +49,7 @@ async def register_user(user_in: UserCreate, db: AsyncSession = Depends(get_sess
 
     new_user = await create_user(db, user_in=user_in)
 
-    # Generate verification_token (simulate sending via email)
+    # Generate verification_token for the frontend verification step.
     verification_token = create_verification_token(new_user.id)
 
     return {
@@ -59,7 +59,7 @@ async def register_user(user_in: UserCreate, db: AsyncSession = Depends(get_sess
         "is_active": new_user.is_active,
         "is_verified": new_user.is_verified,
         "created_at": new_user.created_at,
-        "verification_token": verification_token  # 🔹 frontend will receive the token for MVP
+        "verification_token": verification_token
     }
 
 
@@ -86,7 +86,7 @@ async def login(request: Request, user_in: UserLogin, db: AsyncSession = Depends
     if not user or not verify_password(user_in.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    if not user.is_verified and settings.app_env != "development":
+    if not user.is_verified:
         raise HTTPException(status_code=403, detail="Email not verified")
 
     access_token = create_access_token(data={"user_id": user.id})
@@ -108,7 +108,7 @@ async def login(request: Request, user_in: UserLogin, db: AsyncSession = Depends
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=False,  # 🔹 locally
+        secure=settings.app_env != "development",
         samesite="lax",
         max_age=60 * 60 * 24 * 7,
     )

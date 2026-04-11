@@ -24,6 +24,7 @@ let transactions = [];
 let parsedTransactionDraft = null;
 let editingTransactionId = null;
 let latestSummary = null;
+let pendingVerification = null;
 
 const views = {
     landing: document.getElementById("view-landing"),
@@ -46,6 +47,10 @@ const heroStartBtn = document.getElementById("hero-start-btn");
 const heroLoginBtn = document.getElementById("hero-login-btn");
 const switchToRegisterBtn = document.getElementById("switch-to-register");
 const switchToLoginBtn = document.getElementById("switch-to-login");
+const verifyPanel = document.getElementById("verify-panel");
+const verifyTokenInput = document.getElementById("verify-token");
+const verifyAccountBtn = document.getElementById("verify-account-btn");
+const backToLoginBtn = document.getElementById("back-to-login-btn");
 
 const loginForm = document.getElementById("login-form");
 const registerForm = document.getElementById("register-form");
@@ -65,8 +70,7 @@ const surveyCapitalInput = document.getElementById("survey-capital");
 const surveyCapitalCurrencyInput = document.getElementById("survey-capital-currency");
 const surveySkillsInput = document.getElementById("survey-skills");
 const surveyFinancialGoalInput = document.getElementById("survey-financial-goal");
-const surveySportInput = document.getElementById("survey-sport");
-const surveySportTypeInput = document.getElementById("survey-sport-type");
+const surveyTrackerGoalInput = document.getElementById("survey-tracker-goal");
 const surveyNonFinancialGoalInput = document.getElementById("survey-non-financial-goal");
 
 const balanceEl = document.getElementById("balance");
@@ -95,6 +99,7 @@ const filterTypeInput = document.getElementById("filter-type");
 const filterCategoryInput = document.getElementById("filter-category");
 const fromDateInput = document.getElementById("from-date");
 const toDateInput = document.getElementById("to-date");
+const periodFilterInput = document.getElementById("period-filter");
 
 const pieChartCanvas = document.getElementById("pie-chart");
 const lineChartCanvas = document.getElementById("line-chart");
@@ -187,12 +192,26 @@ function setSelectOptions(selectElement, values, withAllOption = false, labelPre
 
 function showAuthMode(mode) {
     const loginVisible = mode === "login";
+    const registerVisible = mode === "register";
+    const verifyVisible = mode === "verify";
     loginForm.classList.toggle("hidden", !loginVisible);
-    registerForm.classList.toggle("hidden", loginVisible);
-    document.getElementById("auth-title").textContent = loginVisible ? "Login" : "Create account";
-    document.getElementById("auth-subtitle").textContent = loginVisible
-        ? "Use your account to open the tracker."
-        : "Register to start with onboarding and the tracker.";
+    registerForm.classList.toggle("hidden", !registerVisible);
+    verifyPanel.classList.toggle("hidden", !verifyVisible);
+
+    if (loginVisible) {
+        document.getElementById("auth-title").textContent = "Login";
+        document.getElementById("auth-subtitle").textContent = "Use your account to open the tracker.";
+        return;
+    }
+
+    if (registerVisible) {
+        document.getElementById("auth-title").textContent = "Create account";
+        document.getElementById("auth-subtitle").textContent = "Register to start with onboarding and the tracker.";
+        return;
+    }
+
+    document.getElementById("auth-title").textContent = "Verify account";
+    document.getElementById("auth-subtitle").textContent = "Confirm your email before you enter the tracker.";
 }
 
 function updateTopbarAuthState() {
@@ -224,8 +243,26 @@ function openRegisterView(prefill = {}) {
     }
 }
 
+function openVerifyView(token, credentials = null) {
+    setActiveView("auth");
+    showAuthMode("verify");
+    verifyTokenInput.value = token || "";
+    pendingVerification = {
+        token,
+        credentials
+    };
+}
+
 function goToDashboardOrSurvey() {
     window.location.hash = authState.survey ? "#/app/dashboard" : "#/survey";
+}
+
+async function navigateTo(hash) {
+    if (window.location.hash === hash) {
+        await handleRouteChange();
+        return;
+    }
+    window.location.hash = hash;
 }
 
 function setActiveView(viewName) {
@@ -371,10 +408,11 @@ async function loadSurvey() {
 
 async function loadDashboardData() {
     setStatus("Loading transactions and dashboard data...");
+    const period = periodFilterInput.value || "month";
     const [transactionList, summary, insights] = await Promise.all([
-        transactionsApi.getMine(),
-        transactionsApi.getSummary(),
-        transactionsApi.getInsights()
+        transactionsApi.getMine(period),
+        transactionsApi.getSummary(period),
+        transactionsApi.getInsights(period)
     ]);
 
     latestSummary = summary;
@@ -402,8 +440,7 @@ function fillSurveyForm(survey) {
     surveyCapitalCurrencyInput.value = survey.capital_currency || "PLN";
     surveySkillsInput.value = Array.isArray(survey.skills) ? survey.skills.join(", ") : "";
     surveyFinancialGoalInput.value = survey.financial_goal || "";
-    surveySportInput.checked = Boolean(survey.sport);
-    surveySportTypeInput.value = survey.sport_type || "";
+    surveyTrackerGoalInput.value = survey.tracker_goal || "";
     surveyNonFinancialGoalInput.value = survey.non_financial_goal || "";
 }
 
@@ -489,18 +526,7 @@ async function loginAndBoot(email, password) {
     authState.token = token.access_token;
     await ensureSession();
     showToast("Logged in successfully.", "success");
-    goToDashboardOrSurvey();
-}
-
-async function continueAfterRegistration(payload) {
-    try {
-        await loginAndBoot(payload.email, payload.password);
-        return true;
-    } catch (loginError) {
-        openLoginView({ email: payload.email, password: payload.password });
-        showToast("Account created. Log in with the same credentials to continue.", "info");
-        return false;
-    }
+    await navigateTo(authState.survey ? "#/app/dashboard" : "#/survey");
 }
 
 function collectSurveyPayload() {
@@ -513,8 +539,7 @@ function collectSurveyPayload() {
             .map((item) => item.trim())
             .filter(Boolean),
         financial_goal: surveyFinancialGoalInput.value.trim(),
-        sport: surveySportInput.checked,
-        sport_type: surveySportTypeInput.value.trim() || null,
+        tracker_goal: surveyTrackerGoalInput.value.trim(),
         non_financial_goal: surveyNonFinancialGoalInput.value.trim() || null
     };
 }
@@ -551,6 +576,10 @@ switchToLoginBtn.addEventListener("click", () => {
     window.location.hash = "#/login";
 });
 
+backToLoginBtn.addEventListener("click", () => {
+    openLoginView(pendingVerification?.credentials || {});
+});
+
 document.querySelectorAll(".nav-btn").forEach((button) => {
     button.addEventListener("click", () => {
         window.location.hash = button.dataset.route;
@@ -580,6 +609,10 @@ loginForm.addEventListener("submit", async (event) => {
     try {
         await loginAndBoot(loginEmailInput.value.trim(), loginPasswordInput.value);
     } catch (error) {
+        if (error.status === 403) {
+            showToast("Your account is not verified yet. Complete verification first.", "error");
+            return;
+        }
         showToast(error.message || "Login failed.", "error");
     }
 });
@@ -595,19 +628,17 @@ registerForm.addEventListener("submit", async (event) => {
 
     try {
         const registeredUser = await authApi.register(payload);
-
         if (registeredUser.verification_token) {
-            try {
-                await authApi.verifyEmail(registeredUser.verification_token);
-            } catch (verificationError) {
-                console.warn("Verification step failed after successful registration.", verificationError);
-            }
+            openVerifyView(registeredUser.verification_token, {
+                email: payload.email,
+                password: payload.password
+            });
+            showToast("Account created. Verify it to continue.", "success");
+            return;
         }
 
-        const autoLoggedIn = await continueAfterRegistration(payload);
-        if (autoLoggedIn) {
-            showToast("Account created and verified for demo flow.", "success");
-        }
+        openLoginView({ email: payload.email });
+        showToast("Account created. Please log in.", "success");
     } catch (error) {
         if (isEmailAlreadyRegisteredError(error)) {
             openLoginView({ email: payload.email });
@@ -616,6 +647,31 @@ registerForm.addEventListener("submit", async (event) => {
         }
 
         showToast(error.message || "Registration failed.", "error");
+    }
+});
+
+verifyAccountBtn.addEventListener("click", async () => {
+    const token = verifyTokenInput.value.trim();
+    if (!token) {
+        showToast("Verification token is missing.", "error");
+        return;
+    }
+
+    try {
+        await authApi.verifyEmail(token);
+        showToast("Account verified.", "success");
+
+        if (pendingVerification?.credentials?.email && pendingVerification?.credentials?.password) {
+            const credentials = pendingVerification.credentials;
+            pendingVerification = null;
+            await loginAndBoot(credentials.email, credentials.password);
+            return;
+        }
+
+        pendingVerification = null;
+        openLoginView();
+    } catch (error) {
+        showToast(error.message || "Could not verify account.", "error");
     }
 });
 
@@ -704,6 +760,14 @@ transactionsBody.addEventListener("click", async (event) => {
 
 [searchInput, filterTypeInput, filterCategoryInput, fromDateInput, toDateInput].forEach((input) => {
     input.addEventListener(input.tagName === "SELECT" ? "change" : "input", applyFilters);
+});
+
+periodFilterInput.addEventListener("change", async () => {
+    try {
+        await refreshAppData();
+    } catch (error) {
+        showToast(error.message || "Could not update the selected period.", "error");
+    }
 });
 
 aiParseForm.addEventListener("submit", async (event) => {
