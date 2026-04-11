@@ -1,207 +1,323 @@
-function drawCharts(list, pieChartCanvas, barChartCanvas, activeTypeFilter = "all") {
-    drawPieChart(list, pieChartCanvas);
-    drawBarChart(list, barChartCanvas, activeTypeFilter);
-}
+let spendingChartInstance = null;
+let balanceTrendChartInstance = null;
+let cashFlowChartInstance = null;
 
-function getTotalsByCategory(list) {
-    const filteredTransactions = list.filter((t) => t.type === "expense");
+const chartPalette = {
+    blue: "#3b82f6",
+    blueSoft: "rgba(59, 130, 246, 0.18)",
+    emerald: "#10b981",
+    emeraldSoft: "rgba(16, 185, 129, 0.18)",
+    red: "#ef4444",
+    redSoft: "rgba(239, 68, 68, 0.18)",
+    gray: "#94a3b8",
+    grid: "rgba(148, 163, 184, 0.16)"
+};
 
-    return filteredTransactions.reduce((acc, transaction) => {
-        const category = transaction.category;
-
-        if (!acc[category]) {
-            acc[category] = 0;
-        }
-
-        acc[category] += transaction.amount;
-        return acc;
-    }, {});
-}
-
-function getMonthlyTotalsByType(list) {
-    return list.reduce((acc, transaction) => {
-        const monthKey = transaction.date.slice(0, 7);
-
-        if (!acc[monthKey]) {
-            acc[monthKey] = {
-                income: 0,
-                expense: 0
-            };
-        }
-
-        acc[monthKey][transaction.type] += transaction.amount;
-        return acc;
-    }, {});
-}
-
-function drawEmptyState(ctx, canvas, message) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#666";
-    ctx.font = "16px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText(message, canvas.width / 2, canvas.height / 2);
-    ctx.textAlign = "start";
-}
-
-function drawPieChart(list, pieChartCanvas) {
-    if (!pieChartCanvas) {
-        return;
+function destroyChart(chart) {
+    if (chart) {
+        chart.destroy();
     }
+}
 
-    const ctx = pieChartCanvas.getContext("2d");
-    const categoryTotals = getTotalsByCategory(list);
-    const entries = Object.entries(categoryTotals);
-    const chartTitle = "Expenses by category";
+function formatChartMoney(value, currency = "PLN") {
+    return `${Number(value || 0).toFixed(0)} ${currency}`;
+}
 
-    if (entries.length === 0) {
-        drawEmptyState(ctx, pieChartCanvas, "No expense data for pie chart");
-        return;
-    }
+function buildBalanceTrendSeries(summary) {
+    const periods = summary?.period_breakdown || [];
+    const labels = [];
+    const values = [];
+    let runningBalance = Number(summary?.starting_balance || 0);
 
-    ctx.clearRect(0, 0, pieChartCanvas.width, pieChartCanvas.height);
-
-    const total = entries.reduce((sum, [, value]) => sum + value, 0);
-    const centerX = 150;
-    const centerY = 170;
-    const radius = 100;
-
-    const colors = [
-        "#4F46E5",
-        "#06B6D4",
-        "#10B981",
-        "#F59E0B",
-        "#EF4444",
-        "#8B5CF6",
-        "#EC4899",
-        "#84CC16"
-    ];
-
-    let startAngle = 0;
-
-    entries.forEach(([category, value], index) => {
-        const sliceAngle = (value / total) * Math.PI * 2;
-
-        ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
-        ctx.closePath();
-        ctx.fillStyle = colors[index % colors.length];
-        ctx.fill();
-
-        startAngle += sliceAngle;
+    periods.forEach((period) => {
+        runningBalance += Number(period.income || 0) - Number(period.expense || 0);
+        labels.push(period.period);
+        values.push(runningBalance);
     });
 
-    ctx.fillStyle = "#111";
-    ctx.font = "14px Arial";
-    ctx.fillText(chartTitle, 20, 24);
-
-    entries.forEach(([category, value], index) => {
-        const legendY = 300 + index * 24;
-        const color = colors[index % colors.length];
-        const percentage = ((value / total) * 100).toFixed(1);
-
-        ctx.fillStyle = color;
-        ctx.fillRect(20, legendY - 12, 14, 14);
-
-        ctx.fillStyle = "#222";
-        ctx.fillText(`${category}: ${value.toFixed(2)} PLN (${percentage}%)`, 44, legendY);
-    });
+    return { labels, values };
 }
 
-function drawBarChart(list, barChartCanvas, activeTypeFilter = "all") {
-    if (!barChartCanvas) {
-        return;
+function buildCashFlowSeries(summary, activeTypeFilter = "all") {
+    const periods = summary?.period_breakdown || [];
+    const labels = periods.map((period) => period.period);
+
+    const datasets = [];
+    if (activeTypeFilter === "all" || activeTypeFilter === "income") {
+        datasets.push({
+            label: "Income",
+            data: periods.map((period) => Number(period.income || 0)),
+            backgroundColor: chartPalette.emerald,
+            borderRadius: 10,
+            maxBarThickness: 30
+        });
     }
 
-    const ctx = barChartCanvas.getContext("2d");
-    const monthlyTotals = getMonthlyTotalsByType(list);
-    const entries = Object.entries(monthlyTotals).sort(([a], [b]) => a.localeCompare(b));
-
-    if (entries.length === 0) {
-        drawEmptyState(ctx, barChartCanvas, "No data for bar chart");
-        return;
+    if (activeTypeFilter === "all" || activeTypeFilter === "expense") {
+        datasets.push({
+            label: "Expenses",
+            data: periods.map((period) => Number(period.expense || 0)),
+            backgroundColor: chartPalette.red,
+            borderRadius: 10,
+            maxBarThickness: 30
+        });
     }
 
-    ctx.clearRect(0, 0, barChartCanvas.width, barChartCanvas.height);
+    return { labels, datasets };
+}
 
-    const chartTitle =
-        activeTypeFilter === "income"
-            ? "Income by period"
-            : activeTypeFilter === "expense"
-              ? "Expenses by period"
-              : "Income and expenses by period";
-    const maxValue = Math.max(
-        ...entries.flatMap(([, totals]) =>
-            activeTypeFilter === "all"
-                ? [totals.income, totals.expense]
-                : [totals[activeTypeFilter]]
-        )
-    );
-    const chartLeft = 50;
-    const chartBottom = 340;
-    const chartHeight = 220;
-    const chartWidth = 380;
-    const barWidth = activeTypeFilter === "all" ? 24 : 40;
-    const gap = 20;
+function buildCategorySeries(summary) {
+    const categories = summary?.category_breakdown || [];
+    return {
+        labels: categories.map((item) => item.category),
+        values: categories.map((item) => Number(item.amount || 0))
+    };
+}
 
-    ctx.strokeStyle = "#333";
-    ctx.beginPath();
-    ctx.moveTo(chartLeft, 40);
-    ctx.lineTo(chartLeft, chartBottom);
-    ctx.lineTo(chartLeft + chartWidth, chartBottom);
-    ctx.stroke();
-
-    ctx.fillStyle = "#111";
-    ctx.font = "14px Arial";
-    ctx.fillText(chartTitle, 20, 24);
-
-    entries.forEach(([month, totals], index) => {
-        const groupX = chartLeft + 20 + index * (activeTypeFilter === "all" ? (barWidth * 2 + 8 + gap) : (barWidth + gap));
-        const series =
-            activeTypeFilter === "all"
-                ? [
-                    { key: "income", color: "#10B981", x: groupX },
-                    { key: "expense", color: "#EF4444", x: groupX + barWidth + 8 }
-                ]
-                : [
-                    {
-                        key: activeTypeFilter,
-                        color: activeTypeFilter === "income" ? "#10B981" : "#EF4444",
-                        x: groupX
+function getSharedOptions(currency = "PLN") {
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: {
+                    color: "#475467",
+                    font: {
+                        family: "Manrope",
+                        size: 13,
+                        weight: "700"
+                    },
+                    boxWidth: 12,
+                    boxHeight: 12,
+                    usePointStyle: true,
+                    pointStyle: "circle"
+                }
+            },
+            tooltip: {
+                backgroundColor: "rgba(255,255,255,0.96)",
+                titleColor: "#0f172a",
+                bodyColor: "#334155",
+                borderColor: "rgba(226, 232, 240, 1)",
+                borderWidth: 1,
+                padding: 14,
+                displayColors: true,
+                titleFont: {
+                    family: "Sora",
+                    weight: "700"
+                },
+                bodyFont: {
+                    family: "Manrope",
+                    weight: "700"
+                },
+                callbacks: {
+                    label(context) {
+                        const label = context.dataset?.label || context.label || "";
+                        return `${label ? `${label}: ` : ""}${formatChartMoney(context.parsed.y ?? context.parsed, currency)}`;
                     }
-                ];
-
-        series.forEach(({ key, color, x }) => {
-            const value = totals[key];
-            const barHeight = maxValue === 0 ? 0 : (value / maxValue) * chartHeight;
-            const y = chartBottom - barHeight;
-
-            ctx.fillStyle = color;
-            ctx.fillRect(x, y, barWidth, barHeight);
-
-            ctx.fillStyle = "#222";
-            ctx.font = "12px Arial";
-            if (value > 0) {
-                ctx.fillText(value.toFixed(0), x, y - 8);
+                }
             }
-        });
+        },
+        scales: {
+            x: {
+                grid: {
+                    display: false
+                },
+                ticks: {
+                    color: "#667085",
+                    font: {
+                        family: "Manrope",
+                        weight: "700"
+                    }
+                }
+            },
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: chartPalette.grid
+                },
+                ticks: {
+                    color: "#667085",
+                    font: {
+                        family: "Manrope",
+                        weight: "700"
+                    },
+                    callback(value) {
+                        return formatChartMoney(value, currency);
+                    }
+                }
+            }
+        }
+    };
+}
 
-        ctx.fillStyle = "#222";
-        ctx.font = "12px Arial";
-        ctx.fillText(month, groupX - 4, chartBottom + 18);
-    });
-
-    if (activeTypeFilter === "all") {
-        const legendItems = [
-            { label: "Income", color: "#10B981", x: 220 },
-            { label: "Expense", color: "#EF4444", x: 310 }
-        ];
-
-        legendItems.forEach(({ label, color, x }) => {
-            ctx.fillStyle = color;
-            ctx.fillRect(x, 12, 14, 14);
-            ctx.fillStyle = "#222";
-            ctx.fillText(label, x + 20, 24);
-        });
+function drawSpendingChart(summary, canvas, currency) {
+    if (!canvas || !window.Chart) {
+        return;
     }
+
+    const series = buildCategorySeries(summary);
+    destroyChart(spendingChartInstance);
+
+    if (!series.values.length) {
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+    }
+
+    spendingChartInstance = new Chart(canvas, {
+        type: "doughnut",
+        data: {
+            labels: series.labels,
+            datasets: [
+                {
+                    data: series.values,
+                    backgroundColor: [
+                        "#3b82f6",
+                        "#10b981",
+                        "#f59e0b",
+                        "#8b5cf6",
+                        "#ec4899",
+                        "#64748b",
+                        "#06b6d4",
+                        "#f97316"
+                    ],
+                    borderColor: "#ffffff",
+                    borderWidth: 5,
+                    hoverOffset: 10
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "68%",
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        color: "#475467",
+                        font: {
+                            family: "Manrope",
+                            size: 13,
+                            weight: "700"
+                        },
+                        boxWidth: 12,
+                        boxHeight: 12,
+                        usePointStyle: true,
+                        pointStyle: "circle"
+                    }
+                },
+                tooltip: {
+                    backgroundColor: "rgba(255,255,255,0.96)",
+                    titleColor: "#0f172a",
+                    bodyColor: "#334155",
+                    borderColor: "rgba(226, 232, 240, 1)",
+                    borderWidth: 1,
+                    padding: 14,
+                    callbacks: {
+                        label(context) {
+                            return `${context.label}: ${formatChartMoney(context.parsed, currency)}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function drawBalanceTrendChart(summary, canvas, currency) {
+    if (!canvas || !window.Chart) {
+        return;
+    }
+
+    const series = buildBalanceTrendSeries(summary);
+    destroyChart(balanceTrendChartInstance);
+
+    if (!series.values.length) {
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+    }
+
+    balanceTrendChartInstance = new Chart(canvas, {
+        type: "line",
+        data: {
+            labels: series.labels,
+            datasets: [
+                {
+                    label: "Balance",
+                    data: series.values,
+                    borderColor: chartPalette.blue,
+                    backgroundColor: chartPalette.blueSoft,
+                    fill: true,
+                    tension: 0.36,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: "#ffffff",
+                    pointBorderColor: chartPalette.blue,
+                    pointBorderWidth: 3
+                }
+            ]
+        },
+        options: {
+            ...getSharedOptions(currency),
+            plugins: {
+                ...getSharedOptions(currency).plugins,
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
+function drawCashFlowChart(summary, canvas, activeTypeFilter, currency) {
+    if (!canvas || !window.Chart) {
+        return;
+    }
+
+    const series = buildCashFlowSeries(summary, activeTypeFilter);
+    destroyChart(cashFlowChartInstance);
+
+    if (!series.datasets.length) {
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        return;
+    }
+
+    cashFlowChartInstance = new Chart(canvas, {
+        type: "bar",
+        data: {
+            labels: series.labels,
+            datasets: series.datasets
+        },
+        options: {
+            ...getSharedOptions(currency),
+            plugins: {
+                ...getSharedOptions(currency).plugins,
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        color: "#475467",
+                        font: {
+                            family: "Manrope",
+                            size: 13,
+                            weight: "700"
+                        },
+                        boxWidth: 12,
+                        boxHeight: 12,
+                        usePointStyle: true,
+                        pointStyle: "circle"
+                    }
+                }
+            }
+        }
+    });
+}
+
+function drawCharts(summary, pieChartCanvas, lineChartCanvas, barChartCanvas, activeTypeFilter = "all") {
+    const currency = summary?.base_currency || "PLN";
+    drawSpendingChart(summary, pieChartCanvas, currency);
+    drawBalanceTrendChart(summary, lineChartCanvas, currency);
+    drawCashFlowChart(summary, barChartCanvas, activeTypeFilter, currency);
 }

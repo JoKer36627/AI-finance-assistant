@@ -23,6 +23,7 @@ const authState = {
 let transactions = [];
 let parsedTransactionDraft = null;
 let editingTransactionId = null;
+let latestSummary = null;
 
 const views = {
     landing: document.getElementById("view-landing"),
@@ -71,6 +72,8 @@ const surveyNonFinancialGoalInput = document.getElementById("survey-non-financia
 const balanceEl = document.getElementById("balance");
 const incomeEl = document.getElementById("income");
 const expensesEl = document.getElementById("expenses");
+const savingsRateEl = document.getElementById("savings-rate");
+const lastUpdatedEl = document.getElementById("last-updated");
 const insightsListEl = document.getElementById("insights-list");
 const transactionsBody = document.getElementById("transactions-body");
 const chatMessagesEl = document.getElementById("chat-messages");
@@ -94,6 +97,7 @@ const fromDateInput = document.getElementById("from-date");
 const toDateInput = document.getElementById("to-date");
 
 const pieChartCanvas = document.getElementById("pie-chart");
+const lineChartCanvas = document.getElementById("line-chart");
 const barChartCanvas = document.getElementById("bar-chart");
 
 const aiTextInput = document.getElementById("ai-text");
@@ -101,6 +105,7 @@ const aiPreviewEl = document.getElementById("ai-preview");
 const aiPreviewContentEl = document.getElementById("ai-preview-content");
 const confirmAiBtn = document.getElementById("confirm-ai-btn");
 const discardAiBtn = document.getElementById("discard-ai-btn");
+const promptSuggestionButtons = document.querySelectorAll(".prompt-chip");
 
 const chatInput = document.getElementById("chat-input");
 
@@ -253,6 +258,15 @@ function renderSummary(summary) {
     balanceEl.textContent = formatMoney(summary.balance, baseCurrency);
     incomeEl.textContent = formatMoney(summary.income_total, baseCurrency);
     expensesEl.textContent = formatMoney(summary.expense_total, baseCurrency);
+    const income = Number(summary.income_total || 0);
+    const expense = Number(summary.expense_total || 0);
+    const savingsRate = income > 0 ? (((income - expense) / income) * 100) : 0;
+    savingsRateEl.textContent = `${savingsRate.toFixed(1)}%`;
+    lastUpdatedEl.textContent = new Date().toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric"
+    });
 }
 
 function renderInsights(insights) {
@@ -276,18 +290,19 @@ function renderTransactions(list) {
     list.forEach((transaction) => {
         const row = document.createElement("tr");
         const isConverted = (transaction.currency || "PLN") !== "PLN";
+        const isIncome = transaction.type === "income";
         const amountMarkup = isConverted
             ? `
-                <div>${formatMoney(transaction.originalAmount, transaction.currency || "PLN")}</div>
-                <small>~ ${formatMoney(transaction.convertedAmount, "PLN")}</small>
+                <div class="${isIncome ? "amount-positive" : "amount-negative"}">${isIncome ? "+" : "-"}${formatMoney(transaction.originalAmount, transaction.currency || "PLN")}</div>
+                <small class="amount-secondary">~ ${formatMoney(transaction.convertedAmount, "PLN")}</small>
             `
-            : `<div>${formatMoney(transaction.convertedAmount, "PLN")}</div>`;
+            : `<div class="${isIncome ? "amount-positive" : "amount-negative"}">${isIncome ? "+" : "-"}${formatMoney(transaction.convertedAmount, authState.survey?.capital_currency || "PLN")}</div>`;
         row.innerHTML = `
             <td>${transaction.date}</td>
-            <td>${transaction.name}</td>
-            <td>${transaction.category}</td>
-            <td>${transaction.type}</td>
-            <td>${transaction.source}</td>
+            <td><div class="transaction-note">${transaction.name}</div></td>
+            <td><span class="tag-chip">${transaction.category}</span></td>
+            <td><span class="tag-chip ${isIncome ? "tag-income" : "tag-expense"}">${transaction.type}</span></td>
+            <td><span class="tag-chip">${transaction.source}</span></td>
             <td>${amountMarkup}</td>
             <td>
                 <button class="small-btn edit-btn" data-id="${transaction.id}">Edit</button>
@@ -337,7 +352,7 @@ function applyFilters() {
     });
 
     renderTransactions(filteredTransactions);
-    drawCharts(filteredTransactions, pieChartCanvas, barChartCanvas, filterTypeInput.value);
+    drawCharts(latestSummary, pieChartCanvas, lineChartCanvas, barChartCanvas, filterTypeInput.value);
 }
 
 async function loadSurvey() {
@@ -362,6 +377,7 @@ async function loadDashboardData() {
         transactionsApi.getInsights()
     ]);
 
+    latestSummary = summary;
     transactions = transactionList.map(normalizeTransaction);
     renderSummary(summary);
     renderInsights(insights.insights || []);
@@ -740,6 +756,13 @@ chatForm.addEventListener("submit", async (event) => {
     } catch (error) {
         renderChatMessage("assistant", error.message || "Assistant is unavailable right now.");
     }
+});
+
+promptSuggestionButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+        chatInput.value = button.dataset.prompt || "";
+        chatInput.focus();
+    });
 });
 
 setSelectOptions(typeInput, TYPE_OPTIONS);

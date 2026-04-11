@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Xoraq Finance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -22,37 +25,56 @@
                 <div class="hero-card">
                     <div class="hero-copy">
                         <p class="eyebrow">AI-assisted expense tracking</p>
-                        <h1>Track expenses faster, then ask AI what your money is doing.</h1>
+                        <h1>Track your money in one calm, intelligent workspace.</h1>
                         <p class="hero-text">
-                            Add transactions manually or from plain text, keep your dashboard in sync,
-                            and get lightweight insights without juggling separate tools.
+                            Capture expenses and income, set your starting capital, and ask AI to explain what is changing in your finances without leaving the dashboard.
                         </p>
                         <div class="hero-actions">
                             <button id="hero-start-btn" class="primary-btn">Try the product</button>
                             <button id="hero-login-btn" class="ghost-btn">I already have an account</button>
                         </div>
                     </div>
-                    <div class="hero-steps">
-                        <article class="step-card">
-                            <span>1</span>
-                            <h3>Create account</h3>
-                            <p>Register, verify, and open your private finance workspace.</p>
-                        </article>
-                        <article class="step-card">
-                            <span>2</span>
-                            <h3>Complete setup</h3>
-                            <p>Fill a short survey so the assistant understands your context.</p>
-                        </article>
-                        <article class="step-card">
-                            <span>3</span>
-                            <h3>Add expenses</h3>
-                            <p>Use the form or write natural text like “coffee 15 zl”.</p>
-                        </article>
-                        <article class="step-card">
-                            <span>4</span>
-                            <h3>Read insights</h3>
-                            <p>Watch the dashboard update and ask the assistant for analysis.</p>
-                        </article>
+                    <div class="hero-preview">
+                        <div class="hero-preview-card">
+                            <div class="hero-preview-head">
+                                <div>
+                                    <p class="eyebrow">Finance dashboard</p>
+                                    <h3>Minimal, focused, actionable</h3>
+                                </div>
+                                <span class="hero-preview-badge">Live tracker</span>
+                            </div>
+                            <div class="hero-kpis">
+                                <article>
+                                    <span>Total balance</span>
+                                    <strong>$21,300</strong>
+                                    <small>+17.2% this month</small>
+                                </article>
+                                <article>
+                                    <span>Total income</span>
+                                    <strong>$11,000</strong>
+                                    <small>Salary, freelance, transfers</small>
+                                </article>
+                                <article>
+                                    <span>Total expenses</span>
+                                    <strong>$5,900</strong>
+                                    <small>Food, utilities, transport</small>
+                                </article>
+                            </div>
+                            <div class="hero-list">
+                                <div class="hero-list-row">
+                                    <span>Recent AI capture</span>
+                                    <strong>“Bought groceries for 120 PLN”</strong>
+                                </div>
+                                <div class="hero-list-row">
+                                    <span>Assistant insight</span>
+                                    <strong>Food spending is 38% of expenses this week</strong>
+                                </div>
+                                <div class="hero-list-row">
+                                    <span>Setup</span>
+                                    <strong>Choose your base currency and starting capital</strong>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -152,45 +174,75 @@
             <section id="view-app" class="view">
                 <div class="app-layout">
                     <aside class="app-sidebar">
-                        <div class="sidebar-card">
-                            <p class="eyebrow">Workspace</p>
-                            <h2 id="sidebar-user-name">Welcome</h2>
-                            <p id="sidebar-user-email" class="muted-text"></p>
+                        <div class="sidebar-card sidebar-brand-card">
+                            <div class="sidebar-brand-mark">X</div>
+                            <div>
+                                <p class="eyebrow">Workspace</p>
+                                <h2 id="sidebar-user-name">Welcome</h2>
+                                <p id="sidebar-user-email" class="muted-text"></p>
+                            </div>
                         </div>
-                        <button class="nav-btn active" data-route="#/app/dashboard">Dashboard</button>
-                        <button class="nav-btn" data-route="#/app/ai">AI Assistant</button>
+                        <div class="sidebar-nav">
+                            <button class="nav-btn active" data-route="#/app/dashboard">
+                                <span class="nav-icon">◫</span>
+                                <span>
+                                    <strong>Dashboard</strong>
+                                    <small>Balance, charts, transactions</small>
+                                </span>
+                            </button>
+                            <button class="nav-btn" data-route="#/app/ai">
+                                <span class="nav-icon">✦</span>
+                                <span>
+                                    <strong>AI Chat Assistant</strong>
+                                    <small>Ask for analysis and advice</small>
+                                </span>
+                            </button>
+                        </div>
                     </aside>
 
                     <div class="app-content">
                         <section id="page-dashboard" class="app-page active">
                             <div class="dashboard-header">
-                                <div>
-                                    <p class="eyebrow">Finance tracker</p>
-                                    <h1>Dashboard</h1>
+                                <div class="dashboard-header-main">
+                                    <p class="eyebrow">Finance dashboard</p>
+                                    <h1>Track your income, expenses, and capital in one place</h1>
+                                    <p class="dashboard-subtitle">Your tracker stays in sync with manual inputs, AI-captured transactions, and your onboarding context.</p>
                                 </div>
-                                <p class="muted-text" id="dashboard-status">Ready to load your data.</p>
+                                <div class="dashboard-header-meta">
+                                    <span class="dashboard-date">Last updated: <strong id="last-updated">Now</strong></span>
+                                    <p class="muted-text" id="dashboard-status">Ready to load your data.</p>
+                                </div>
                             </div>
 
                             <section class="summary-section">
-                                <article class="summary-card">
+                                <article class="summary-card metric-card">
                                     <h3>Balance</h3>
                                     <p id="balance">0.00 PLN</p>
+                                    <span class="metric-note">Starting capital included</span>
                                 </article>
-                                <article class="summary-card">
+                                <article class="summary-card metric-card">
                                     <h3>Income</h3>
                                     <p id="income">0.00 PLN</p>
+                                    <span class="metric-note">Tracked inflows</span>
                                 </article>
-                                <article class="summary-card">
+                                <article class="summary-card metric-card">
                                     <h3>Expenses</h3>
                                     <p id="expenses">0.00 PLN</p>
+                                    <span class="metric-note">Tracked outflows</span>
+                                </article>
+                                <article class="summary-card metric-card">
+                                    <h3>Savings rate</h3>
+                                    <p id="savings-rate">0.0%</p>
+                                    <span class="metric-note">Income minus expenses</span>
                                 </article>
                             </section>
 
-                            <section class="dashboard-grid">
-                                <div class="panel">
+                            <section class="dashboard-grid dashboard-actions-grid">
+                                <div class="panel glass-panel">
                                     <div class="panel-header">
                                         <p class="eyebrow">Manual input</p>
                                         <h2 id="manual-form-title">Add transaction</h2>
+                                        <p>Keep quick control over every transaction you add manually.</p>
                                     </div>
                                     <form id="transaction-form" class="form-grid">
                                         <label>
@@ -220,11 +272,11 @@
                                     </form>
                                 </div>
 
-                                <div class="panel">
+                                <div class="panel glass-panel">
                                     <div class="panel-header">
                                         <p class="eyebrow">AI input</p>
                                         <h2>Add with AI</h2>
-                                        <p>Write a natural sentence and preview the parsed transaction before saving.</p>
+                                        <p>Write naturally, preview what AI understood, then confirm before saving.</p>
                                     </div>
                                     <form id="ai-parse-form" class="stack-form">
                                         <label>
@@ -244,32 +296,62 @@
                                 </div>
                             </section>
 
-                            <section class="panel insights-panel">
-                                <div class="panel-header">
-                                    <p class="eyebrow">AI insights</p>
-                                    <h2>What stands out right now</h2>
+                            <section class="charts-shell">
+                                <div class="panel chart-panel chart-panel-wide">
+                                    <div class="panel-header">
+                                        <p class="eyebrow">Balance trend</p>
+                                        <h2>How your balance evolves over time</h2>
+                                        <p>Monthly trajectory based on starting capital, tracked income, and tracked expenses.</p>
+                                    </div>
+                                    <canvas id="line-chart" height="140"></canvas>
                                 </div>
-                                <div id="insights-list" class="insights-list"></div>
+                                <div class="panel chart-panel">
+                                    <div class="panel-header">
+                                        <p class="eyebrow">Spending by category</p>
+                                        <h2>Expense distribution</h2>
+                                        <p>Current category mix across tracked expenses.</p>
+                                    </div>
+                                    <canvas id="pie-chart" height="200"></canvas>
+                                </div>
+                                <div class="panel chart-panel chart-panel-wide">
+                                    <div class="panel-header">
+                                        <p class="eyebrow">Income vs expenses</p>
+                                        <h2>Monthly cash flow comparison</h2>
+                                        <p>Compare incoming and outgoing money over time.</p>
+                                    </div>
+                                    <canvas id="bar-chart" height="120"></canvas>
+                                </div>
                             </section>
 
-                            <section class="panel">
-                                <div class="panel-header">
-                                    <p class="eyebrow">Filtering</p>
-                                    <h2>Inspect transactions</h2>
-                                </div>
-                                <div class="filters-grid">
-                                    <select id="filter-type"></select>
-                                    <select id="filter-category"></select>
-                                    <input type="date" id="from-date">
-                                    <input type="date" id="to-date">
-                                    <input type="text" id="search" placeholder="Search notes">
-                                </div>
+                            <section class="content-grid">
+                                <section class="panel insights-panel">
+                                    <div class="panel-header">
+                                        <p class="eyebrow">AI insights</p>
+                                        <h2>What stands out right now</h2>
+                                    </div>
+                                    <div id="insights-list" class="insights-list"></div>
+                                </section>
+
+                                <section class="panel">
+                                    <div class="panel-header">
+                                        <p class="eyebrow">Filtering</p>
+                                        <h2>Inspect transactions</h2>
+                                    </div>
+                                    <div class="filters-grid">
+                                        <select id="filter-type"></select>
+                                        <select id="filter-category"></select>
+                                        <input type="date" id="from-date">
+                                        <input type="date" id="to-date">
+                                        <input type="text" id="search" placeholder="Search notes">
+                                    </div>
+                                </section>
                             </section>
 
-                            <section class="panel">
+                            <section class="panel transactions-panel">
                                 <div class="panel-header">
-                                    <p class="eyebrow">History</p>
-                                    <h2>Transactions</h2>
+                                    <p class="eyebrow">Recent transactions</p>
+                                    <h2>Your latest tracked activity</h2>
+                                    <p>Editable transaction history for manual and AI-captured entries.</p>
                                 </div>
                                 <div class="table-wrap">
                                     <table>
@@ -292,37 +374,38 @@
                                     </table>
                                 </div>
                             </section>
-
-                            <section class="charts-section">
-                                <div class="panel chart-box">
-                                    <div class="panel-header">
-                                        <p class="eyebrow">Breakdown</p>
-                                        <h2>Expenses by category</h2>
-                                    </div>
-                                    <canvas id="pie-chart" width="420" height="420"></canvas>
-                                </div>
-                                <div class="panel chart-box">
-                                    <div class="panel-header">
-                                        <p class="eyebrow">Trend</p>
-                                        <h2>Transactions by period</h2>
-                                    </div>
-                                    <canvas id="bar-chart" width="420" height="420"></canvas>
-                                </div>
-                            </section>
                         </section>
 
                         <section id="page-ai" class="app-page">
-                            <div class="panel ai-panel">
-                                <div class="panel-header">
-                                    <p class="eyebrow">Assistant</p>
-                                    <h1>Ask AI about your spending</h1>
-                                    <p>Use the existing assistant backend to ask for analysis or next-step advice.</p>
+                            <div class="ai-layout">
+                                <div class="panel ai-panel ai-chat-panel">
+                                    <div class="panel-header">
+                                        <p class="eyebrow">Assistant</p>
+                                        <h1>Ask AI about your finances</h1>
+                                        <p>Use the assistant to analyze patterns, detect issues, and suggest what to improve next.</p>
+                                    </div>
+                                    <div id="chat-messages" class="chat-messages"></div>
+                                    <form id="chat-form" class="chat-form">
+                                        <textarea id="chat-input" rows="4" placeholder="Analyze my recent expenses and suggest what to optimize." required></textarea>
+                                        <button type="submit" class="primary-btn">Send</button>
+                                    </form>
                                 </div>
-                                <div id="chat-messages" class="chat-messages"></div>
-                                <form id="chat-form" class="chat-form">
-                                    <textarea id="chat-input" rows="4" placeholder="Analyze my recent expenses and suggest what to optimize." required></textarea>
-                                    <button type="submit" class="primary-btn">Send</button>
-                                </form>
+                                <aside class="panel ai-side-panel">
+                                    <div class="panel-header">
+                                        <p class="eyebrow">Prompt ideas</p>
+                                        <h2>Ask better questions</h2>
+                                    </div>
+                                    <div class="prompt-suggestions">
+                                        <button class="prompt-chip" type="button" data-prompt="Analyze my recent spending and tell me what is unusual.">Analyze my recent spending</button>
+                                        <button class="prompt-chip" type="button" data-prompt="What category is hurting my balance the most?">What hurts my balance most?</button>
+                                        <button class="prompt-chip" type="button" data-prompt="How can I improve my savings rate this month?">How can I improve my savings rate?</button>
+                                        <button class="prompt-chip" type="button" data-prompt="Compare my income and expenses and give 3 direct recommendations.">Compare income vs expenses</button>
+                                    </div>
+                                    <div class="ai-side-note">
+                                        <h3>What the assistant sees</h3>
+                                        <p>Your recent transactions, survey context, starting capital, and current financial patterns.</p>
+                                    </div>
+                                </aside>
                             </div>
                         </section>
                     </div>
@@ -333,6 +416,7 @@
 
     <div id="toast" class="toast hidden"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="js/api.js"></script>
     <script src="js/transactions.js"></script>
     <script src="js/charts.js"></script>
