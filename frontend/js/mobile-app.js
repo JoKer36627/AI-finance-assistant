@@ -283,15 +283,35 @@ function renderTransactionsList(transactions = state.transactions) {
                 </div>
                 <div class="info">
                     <div class="note">${t.note || config.label}</div>
-                    <div class="category">${config.label}</div>
+                    <div class="category">${config.label} · ${formatDate(t.transaction_date)}</div>
                 </div>
                 <div class="right">
                     <div class="amount ${t.type}">${isIncome ? '+' : '-'}${formatMoney(t.amount)}</div>
-                    <div class="date">${formatDate(t.transaction_date)}</div>
                 </div>
+                <button class="delete-transaction-btn" data-id="${t.id}" data-testid="delete-tx-${t.id}">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
             </div>
         `;
     }).join('');
+    
+    // Attach delete handlers
+    container.querySelectorAll('.delete-transaction-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            if (confirm('Видалити транзакцію?')) {
+                try {
+                    await transactionsApi.remove(id);
+                    showToast('Транзакцію видалено', 'success');
+                    await loadData();
+                    renderTransactionsList(state.transactions);
+                } catch (error) {
+                    showToast(error.message || 'Помилка видалення', 'error');
+                }
+            }
+        });
+    });
 }
 
 // Transaction Modal

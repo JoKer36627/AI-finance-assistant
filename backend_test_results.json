@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-04-11T13:53:16.220046",
+  "timestamp": "2026-04-11T14:02:12.158190",
   "total_tests": 12,
-  "passed_tests": 11,
-  "success_rate": 0.9166666666666666,
+  "passed_tests": 12,
+  "success_rate": 1.0,
   "results": [
     {
       "test": "Auth Login",
@@ -17,17 +17,17 @@
     {
       "test": "Transactions List",
       "success": true,
-      "details": "Found 10 transactions"
+      "details": "Found 11 transactions"
     },
     {
       "test": "Transactions Summary",
       "success": true,
-      "details": "Balance: 11409.84"
+      "details": "Balance: 11317.44"
     },
     {
       "test": "Create Transaction",
       "success": true,
-      "details": "Created transaction ID: 12"
+      "details": "Created transaction ID: 20"
     },
     {
       "test": "AI Text Parsing",
@@ -36,8 +36,8 @@
     },
     {
       "test": "AI Chat",
-      "success": false,
-      "details": "Response: {'detail': [{'field': 'context', 'msg': 'Input should be a valid dictionary'}]}"
+      "success": true,
+      "details": "Reply length: 363 chars"
     },
     {
       "test": "Transaction Insights",
@@ -47,22 +47,22 @@
     {
       "test": "Period Filter (day)",
       "success": true,
-      "details": "Found 1 transactions"
+      "details": "Found 2 transactions"
     },
     {
       "test": "Period Filter (week)",
       "success": true,
-      "details": "Found 6 transactions"
+      "details": "Found 7 transactions"
     },
     {
       "test": "Period Filter (month)",
       "success": true,
-      "details": "Found 11 transactions"
+      "details": "Found 12 transactions"
     },
     {
       "test": "Period Filter (year)",
       "success": true,
-      "details": "Found 11 transactions"
+      "details": "Found 12 transactions"
     }
   ]
 }

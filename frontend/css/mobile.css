@@ -1059,6 +1059,26 @@ body {
     text-align: right;
 }
 
+.delete-transaction-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(198, 40, 40, 0.1);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--expense);
+    font-size: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 0.2s;
+}
+
+.delete-transaction-btn:active {
+    background: rgba(198, 40, 40, 0.2);
+}
+
 /* Toast */
 .toast {
     position: fixed;

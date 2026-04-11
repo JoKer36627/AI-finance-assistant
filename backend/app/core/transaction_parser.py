@@ -233,6 +233,10 @@ def parse_transaction_text_local(text: str) -> TransactionParseResponse:
 
 
 async def parse_transaction_text_with_llm(text: str) -> TransactionParseResponse:
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    import os
+
+    EMERGENT_KEY = os.environ.get("EMERGENT_LLM_KEY", settings.openai_api_key)
     today = datetime.now(timezone.utc).date().isoformat()
     prompt = (
         "Example input:\n"
@@ -253,23 +257,16 @@ async def parse_transaction_text_with_llm(text: str) -> TransactionParseResponse
         f"User input: {text}"
     )
 
-    response = await asyncio.to_thread(
-        openai.chat.completions.create,
-        model="gpt-3.5-turbo",
-        messages=[
-            {
-                "role": "system",
-                "content": PARSER_SYSTEM_PROMPT,
-            },
-            {"role": "user", "content": prompt},
-        ],
-        temperature=0,
-        max_tokens=220,
-        timeout=getattr(settings, "openai_timeout", 15),
-    )
+    chat = LlmChat(
+        api_key=EMERGENT_KEY,
+        session_id=f"parser_{datetime.now().timestamp()}",
+        system_message=PARSER_SYSTEM_PROMPT
+    ).with_model("openai", "gpt-4o-mini")
 
-    content = response.choices[0].message.content
-    payload = json.loads(content)
+    user_message = UserMessage(text=prompt)
+    content = await chat.send_message(user_message)
+
+    payload = json.loads(str(content))
     payload["category"] = payload.get("category", "other").strip().lower()
     payload["currency"] = payload.get("currency", "PLN").strip().upper()
     payload["transaction_date"] = payload.pop("transaction_date", payload.pop("date", today))
