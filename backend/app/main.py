@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, APIRouter
 from fastapi.responses import JSONResponse
 from app.core.limiter import limiter
 from slowapi.middleware import SlowAPIMiddleware
@@ -12,6 +12,9 @@ from app.logger import log_event
 from app.api import user, auth, message, feedback, event, transactions
 from fastapi.exceptions import RequestValidationError
 from app.api import assistant
+
+# Create API router with /api prefix for Kubernetes ingress
+api_router = APIRouter(prefix="/api")
 
 
 
@@ -66,8 +69,9 @@ async def log_requests(request: Request, call_next):
     )
     return response
 
-# --- Health-check ---
+# --- Health-check (both with and without /api prefix) ---
 @app.get("/healthz")
+@app.get("/api/healthz")
 def health_check():
     return {"status": "ok", "env": settings.app_env}
 
@@ -108,7 +112,7 @@ def custom_openapi():
             "bearerFormat": "JWT"
         }
     }
-    public_paths = {"/healthz", "/auth/login", "/auth/register", "/auth/verify-email", "/auth/refresh"}
+    public_paths = {"/healthz", "/api/healthz", "/api/auth/login", "/api/auth/register", "/api/auth/verify-email", "/api/auth/refresh"}
     for path, path_item in openapi_schema["paths"].items():
         for method in path_item.values():
             if path not in public_paths:
@@ -118,13 +122,16 @@ def custom_openapi():
 
 
 
-# --- Connect routers ---
-app.include_router(user.router)
-app.include_router(auth.router)
-app.include_router(survey.router)
-app.include_router(message.router)
-app.include_router(feedback.router)
+# --- Connect routers to api_router ---
+api_router.include_router(user.router)
+api_router.include_router(auth.router)
+api_router.include_router(survey.router)
+api_router.include_router(message.router)
+api_router.include_router(feedback.router)
+api_router.include_router(assistant.router)
+api_router.include_router(event.router)
+api_router.include_router(transactions.router)
+
+# Include API router in main app
+app.include_router(api_router)
 app.openapi = custom_openapi
-app.include_router(assistant.router)
-app.include_router(event.router)
-app.include_router(transactions.router)

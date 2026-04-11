@@ -5,7 +5,11 @@ if (API_BASE_OVERRIDE) {
     localStorage.setItem("ai_fin_assistant_api_base", API_BASE_OVERRIDE);
 }
 
-const API_BASE = window.API_BASE || API_BASE_OVERRIDE || "http://127.0.0.1:8000";
+// Detect environment: use /api prefix for Emergent preview, direct URL otherwise
+const isEmergentPreview = window.location.hostname.includes('preview.emergentagent.com');
+const API_BASE = isEmergentPreview 
+    ? `${window.location.origin}/api`
+    : (window.API_BASE || API_BASE_OVERRIDE || "http://127.0.0.1:8000");
 const ACCESS_TOKEN_KEY = "ai_fin_assistant_access_token";
 
 async function apiRequest(path, options = {}) {

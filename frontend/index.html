@@ -1,486 +1,327 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xoraq Finance</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Monefy AI Tracker</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/mobile.css">
 </head>
 <body>
-    <div class="page-shell">
-        <header class="topbar">
-            <a class="brand" href="#/">Xoraq Finance</a>
-            <nav class="topbar-actions">
-                <button id="go-login-btn" class="ghost-btn">Login</button>
-                <button id="go-register-btn" class="primary-btn">Try it</button>
-                <button id="logout-btn" class="ghost-btn hidden">Logout</button>
-            </nav>
-        </header>
-
-        <main>
-            <section id="view-landing" class="view active">
-                <div class="hero-layout">
-                    <div class="hero-copy">
-                        <p class="eyebrow">AI finance review</p>
-                        <h1>Understand your spending in 30 seconds.</h1>
-                        <p class="hero-text">
-                            Paste transactions, upload a statement, or describe your recent spending. Xoraq turns it into clear financial insights without forcing you into a full tracker.
-                        </p>
-                        <div class="hero-actions">
-                            <button id="hero-start-btn" class="primary-btn">Analyze now</button>
-                            <button id="hero-login-btn" class="ghost-btn">I already have an account</button>
-                        </div>
-                        <div class="hero-trust">
-                            <span>No long setup</span>
-                            <span>Optional personalization</span>
-                            <span>Manual tracking stays hidden until needed</span>
-                        </div>
-                    </div>
-
-                    <div class="hero-preview">
-                        <article class="preview-surface preview-focus">
-                            <div class="preview-head">
-                                <div>
-                                    <p class="eyebrow">Example result</p>
-                                    <h3>You spent most on food and housing this month.</h3>
-                                </div>
-                                <span class="status-pill">AI ready</span>
-                            </div>
-                            <div class="preview-metrics">
-                                <div>
-                                    <span>Total spent</span>
-                                    <strong>4,820 PLN</strong>
-                                </div>
-                                <div>
-                                    <span>Net result</span>
-                                    <strong>+1,430 PLN</strong>
-                                </div>
-                                <div>
-                                    <span>Top category</span>
-                                    <strong>Food</strong>
-                                </div>
-                            </div>
-                            <ul class="preview-list">
-                                <li>Food delivery is 31% of your expenses.</li>
-                                <li>Transport dropped compared with last month.</li>
-                                <li>You still saved money overall.</li>
-                            </ul>
-                        </article>
-                    </div>
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="screen">
+        <div class="auth-container">
+            <div class="auth-logo">
+                <i class="fas fa-wallet"></i>
+                <h1>Monefy AI</h1>
+                <p>Розумний трекер фінансів</p>
+            </div>
+            
+            <form id="login-form" class="auth-form">
+                <div class="form-group">
+                    <input type="email" id="login-email" placeholder="Email" required>
                 </div>
-            </section>
-
-            <section id="view-auth" class="view">
-                <div class="panel auth-panel">
-                    <div class="panel-header">
-                        <p class="eyebrow">Account</p>
-                        <h2 id="auth-title">Login</h2>
-                        <p id="auth-subtitle">Open your finance review workspace.</p>
-                    </div>
-
-                    <form id="login-form" class="stack-form">
-                        <label>
-                            Email
-                            <input type="email" id="login-email" required placeholder="you@example.com">
-                        </label>
-                        <label>
-                            Password
-                            <input type="password" id="login-password" required placeholder="Your password">
-                        </label>
-                        <button type="submit" class="primary-btn full-width">Login</button>
-                        <button type="button" id="switch-to-register" class="ghost-btn full-width">Create an account</button>
-                    </form>
-
-                    <form id="register-form" class="stack-form hidden">
-                        <label>
-                            Name
-                            <input type="text" id="register-name" placeholder="Your name">
-                        </label>
-                        <label>
-                            Email
-                            <input type="email" id="register-email" required placeholder="you@example.com">
-                        </label>
-                        <label>
-                            Password
-                            <input type="password" id="register-password" required placeholder="Create a password">
-                            <small class="helper-text">At least 8 characters, with uppercase, lowercase, number, and special symbol.</small>
-                        </label>
-                        <button type="submit" class="primary-btn full-width">Create account</button>
-                        <button type="button" id="switch-to-login" class="ghost-btn full-width">Already registered? Login</button>
-                    </form>
-
-                    <div id="verify-panel" class="stack-form hidden">
-                        <label>
-                            Verification token
-                            <input type="text" id="verify-token" readonly>
-                            <small class="helper-text">Prototype mode: verify directly here, then continue to your workspace.</small>
-                        </label>
-                        <button type="button" id="verify-account-btn" class="primary-btn full-width">Verify account</button>
-                        <button type="button" id="back-to-login-btn" class="ghost-btn full-width">Back to login</button>
-                    </div>
+                <div class="form-group">
+                    <input type="password" id="login-password" placeholder="Пароль" required>
                 </div>
-            </section>
+                <button type="submit" class="auth-btn">Увійти</button>
+                <button type="button" id="switch-to-register" class="auth-link">Створити акаунт</button>
+            </form>
 
-            <section id="view-survey" class="view">
-                <div class="panel setup-panel">
-                    <div class="panel-header">
-                        <p class="eyebrow">Optional personalization</p>
-                        <h2>Make your future insights sharper</h2>
-                        <p>You can skip this and start analyzing right away.</p>
-                    </div>
-
-                    <form id="survey-form" class="stack-form">
-                        <label>
-                            Main financial goal
-                            <input type="text" id="survey-financial-goal" placeholder="Save more consistently">
-                        </label>
-                        <label>
-                            Why are you using this tool?
-                            <input type="text" id="survey-tracker-goal" placeholder="I want fast monthly financial reviews">
-                        </label>
-                        <label>
-                            Starting balance
-                            <input type="number" id="survey-capital" min="0" step="0.01" placeholder="Optional">
-                        </label>
-                        <label>
-                            Currency
-                            <select id="survey-capital-currency">
-                                <option value="PLN">PLN</option>
-                                <option value="USD">USD</option>
-                                <option value="EUR">EUR</option>
-                                <option value="UAH">UAH</option>
-                                <option value="GBP">GBP</option>
-                            </select>
-                        </label>
-                        <label class="hidden">
-                            Age
-                            <input type="number" id="survey-age" min="1">
-                        </label>
-                        <label class="hidden">
-                            Skills
-                            <input type="text" id="survey-skills">
-                        </label>
-                        <label class="hidden">
-                            Non-financial goal
-                            <input type="text" id="survey-non-financial-goal">
-                        </label>
-                        <div class="button-row">
-                            <button type="submit" class="primary-btn">Save preferences</button>
-                            <button type="button" id="skip-survey-btn" class="ghost-btn">Skip for now</button>
-                        </div>
-                    </form>
+            <form id="register-form" class="auth-form hidden">
+                <div class="form-group">
+                    <input type="text" id="register-name" placeholder="Ім'я">
                 </div>
-            </section>
-
-            <section id="view-app" class="view">
-                <div class="app-shell">
-                    <aside class="app-sidebar">
-                        <div class="sidebar-card">
-                            <p class="eyebrow">Workspace</p>
-                            <h2 id="sidebar-user-name">Welcome</h2>
-                            <p id="sidebar-user-email" class="muted-text"></p>
-                        </div>
-
-                        <div class="sidebar-nav">
-                            <button class="nav-btn active" data-route="#/app/analyze">
-                                <span class="nav-icon">◎</span>
-                                <span>
-                                    <strong>Analyze</strong>
-                                    <small>Input, result, quick actions</small>
-                                </span>
-                            </button>
-                            <button class="nav-btn" data-route="#/app/details">
-                                <span class="nav-icon">◫</span>
-                                <span>
-                                    <strong>Details</strong>
-                                    <small>Transactions and manual mode</small>
-                                </span>
-                            </button>
-                            <button class="nav-btn" data-route="#/app/ai">
-                                <span class="nav-icon">✦</span>
-                                <span>
-                                    <strong>Follow-up AI</strong>
-                                    <small>Ask questions about the result</small>
-                                </span>
-                            </button>
-                        </div>
-                    </aside>
-
-                    <div class="app-content">
-                        <section id="page-analyze" class="app-page active">
-                            <div class="analysis-hero">
-                                <div>
-                                    <p class="eyebrow">Fast review</p>
-                                    <h1>Give your money context, get a clear answer back.</h1>
-                                    <p class="dashboard-subtitle">Start with a short text, a quick list of transactions, or use the backup manual mode later in details.</p>
-                                </div>
-                                <div class="dashboard-header-meta">
-                                    <span class="dashboard-date">Updated <strong id="last-updated">Now</strong></span>
-                                    <p class="muted-text" id="dashboard-status">Ready to analyze.</p>
-                                </div>
-                            </div>
-
-                            <section class="analysis-input-grid">
-                                <article class="panel input-panel">
-                                    <div class="panel-header">
-                                        <p class="eyebrow">Input</p>
-                                        <h2>Describe or paste your spending</h2>
-                                        <p>Use natural language. The parser will extract transaction type, amount, category, date, and currency.</p>
-                                    </div>
-                                    <form id="ai-parse-form" class="stack-form">
-                                        <label>
-                                            Describe spending or income
-                                            <textarea id="ai-text" rows="6" placeholder="Yesterday groceries 120 PLN, today freelance payment 400 USD"></textarea>
-                                        </label>
-                                        <button type="submit" class="primary-btn">Analyze now</button>
-                                    </form>
-                                    <div id="ai-preview" class="result-preview hidden">
-                                        <div class="panel-header tight">
-                                            <p class="eyebrow">Parsed preview</p>
-                                            <h3>Before saving</h3>
-                                        </div>
-                                        <div id="ai-preview-content" class="preview-grid"></div>
-                                        <div class="button-row">
-                                            <button id="confirm-ai-btn" type="button" class="primary-btn">Save this transaction</button>
-                                            <button id="discard-ai-btn" type="button" class="ghost-btn">Discard</button>
-                                        </div>
-                                    </div>
-                                </article>
-
-                                <article class="panel quick-context-panel">
-                                    <div class="panel-header">
-                                        <p class="eyebrow">Examples</p>
-                                        <h2>Try one of these</h2>
-                                    </div>
-                                    <div class="prompt-suggestions static-suggestions">
-                                        <button class="prompt-chip prompt-fill" type="button" data-fill="Yesterday groceries 120 PLN and taxi 43 PLN">Yesterday groceries 120 PLN and taxi 43 PLN</button>
-                                        <button class="prompt-chip prompt-fill" type="button" data-fill="Last week I got salary 5500 PLN and spent 390 on food">Last week I got salary 5500 PLN and spent 390 on food</button>
-                                        <button class="prompt-chip prompt-fill" type="button" data-fill="Вчора заробив на фрілансі 400 доларів, сьогодні кава 15 злотих">Вчора заробив на фрілансі 400 доларів, сьогодні кава 15 злотих</button>
-                                    </div>
-                                </article>
-                            </section>
-
-                            <section class="result-shell">
-                                <div class="summary-toolbar">
-                                    <div>
-                                        <p class="eyebrow">Result window</p>
-                                        <h3>Current period</h3>
-                                    </div>
-                                    <select id="period-filter" class="period-select">
-                                        <option value="day">Day</option>
-                                        <option value="week">Week</option>
-                                        <option value="month" selected>Month</option>
-                                        <option value="year">Year</option>
-                                    </select>
-                                </div>
-
-                                <article class="panel headline-panel">
-                                    <p class="eyebrow">Primary finding</p>
-                                    <h2 id="primary-insight-title">No analysis yet</h2>
-                                    <p id="primary-insight-message">Add transactions or ask AI to parse a spending note to start seeing patterns.</p>
-                                    <div class="result-actions">
-                                        <button id="ask-follow-up-btn" class="primary-btn" type="button">Ask follow-up</button>
-                                        <button id="see-details-btn" class="ghost-btn" type="button">See details</button>
-                                    </div>
-                                </article>
-
-                                <section class="summary-section result-summary">
-                                    <article class="summary-card metric-card">
-                                        <h3>Total balance</h3>
-                                        <p id="balance">0.00 PLN</p>
-                                        <span id="balance-note" class="metric-note">Current balance view</span>
-                                    </article>
-                                    <article class="summary-card metric-card">
-                                        <h3>Total income</h3>
-                                        <p id="income">0.00 PLN</p>
-                                        <span id="income-note" class="metric-note">Tracked inflows</span>
-                                    </article>
-                                    <article class="summary-card metric-card">
-                                        <h3>Total expenses</h3>
-                                        <p id="expenses">0.00 PLN</p>
-                                        <span id="expense-note" class="metric-note">Tracked outflows</span>
-                                    </article>
-                                    <article class="summary-card metric-card">
-                                        <h3>Savings rate</h3>
-                                        <p id="savings-rate">0.0%</p>
-                                        <span id="savings-note" class="metric-note">Income minus expenses</span>
-                                    </article>
-                                </section>
-
-                                <section class="charts-shell">
-                                    <div class="panel chart-panel chart-panel-wide">
-                                        <div class="panel-header">
-                                            <p class="eyebrow">Trend</p>
-                                            <h2>How your balance evolves</h2>
-                                            <p>Trajectory across the selected period.</p>
-                                        </div>
-                                        <div class="chart-stage chart-stage-line">
-                                            <canvas id="line-chart"></canvas>
-                                        </div>
-                                    </div>
-                                    <div class="panel chart-panel">
-                                        <div class="panel-header">
-                                            <p class="eyebrow">Category split</p>
-                                            <h2>Where the money goes</h2>
-                                            <p>Expense mix for this view.</p>
-                                        </div>
-                                        <div class="chart-stage chart-stage-pie">
-                                            <canvas id="pie-chart"></canvas>
-                                        </div>
-                                    </div>
-                                    <div class="panel chart-panel chart-panel-wide">
-                                        <div class="panel-header">
-                                            <p class="eyebrow">Comparison</p>
-                                            <h2>Income vs expenses</h2>
-                                            <p>Cash flow comparison across periods.</p>
-                                        </div>
-                                        <div class="chart-stage chart-stage-bar">
-                                            <canvas id="bar-chart"></canvas>
-                                        </div>
-                                    </div>
-                                </section>
-
-                                <section class="content-grid">
-                                    <article class="panel insights-panel">
-                                        <div class="panel-header">
-                                            <p class="eyebrow">Key insights</p>
-                                            <h2>What matters most right now</h2>
-                                        </div>
-                                        <div id="insights-list" class="insights-list"></div>
-                                    </article>
-                                </section>
-                            </section>
-                        </section>
-
-                        <section id="page-details" class="app-page">
-                            <div class="section-head">
-                                <div>
-                                    <p class="eyebrow">Advanced mode</p>
-                                    <h1>Manual tracking and transaction details</h1>
-                                    <p class="dashboard-subtitle">This is the backup mode for people who want full control after the AI summary.</p>
-                                </div>
-                            </div>
-
-                            <section class="dashboard-grid dashboard-actions-grid">
-                                <div class="panel">
-                                    <div class="panel-header">
-                                        <p class="eyebrow">Manual input</p>
-                                        <h2 id="manual-form-title">Add transaction</h2>
-                                        <p>Keep direct control over transactions when needed.</p>
-                                    </div>
-                                    <form id="transaction-form" class="form-grid">
-                                        <label>
-                                            Note
-                                            <input type="text" id="name" name="name" placeholder="Grocery shopping" required>
-                                        </label>
-                                        <label>
-                                            Amount
-                                            <input type="number" id="amount" name="amount" placeholder="120.50" step="0.01" min="0.01" required>
-                                        </label>
-                                        <label>
-                                            Type
-                                            <select id="type" name="type" required></select>
-                                        </label>
-                                        <label>
-                                            Category
-                                            <select id="category" name="category" required></select>
-                                        </label>
-                                        <label>
-                                            Date
-                                            <input type="date" id="date" name="date" required>
-                                        </label>
-                                        <div class="button-row full-span">
-                                            <button type="submit" id="submit-btn" class="primary-btn">Add transaction</button>
-                                            <button type="button" id="cancel-edit-btn" class="ghost-btn hidden">Cancel edit</button>
-                                        </div>
-                                    </form>
-                                </div>
-
-                                <div class="panel">
-                                    <div class="panel-header">
-                                        <p class="eyebrow">Filters</p>
-                                        <h2>Inspect transactions</h2>
-                                    </div>
-                                    <div class="filters-grid">
-                                        <select id="filter-type"></select>
-                                        <select id="filter-category"></select>
-                                        <input type="date" id="from-date">
-                                        <input type="date" id="to-date">
-                                        <input type="text" id="search" placeholder="Search notes">
-                                    </div>
-                                </div>
-                            </section>
-
-                            <section class="panel transactions-panel">
-                                <div class="panel-header">
-                                    <p class="eyebrow">Details</p>
-                                    <h2>Recent transactions</h2>
-                                    <p>The full list stays here, not on the main analysis screen.</p>
-                                </div>
-                                <div class="table-wrap">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>Date</th>
-                                                <th>Note</th>
-                                                <th>Category</th>
-                                                <th>Type</th>
-                                                <th>Source</th>
-                                                <th>Amount</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="transactions-body">
-                                            <tr><td colspan="7">No transactions yet.</td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </section>
-                        </section>
-
-                        <section id="page-ai" class="app-page">
-                            <div class="ai-layout">
-                                <div class="panel ai-chat-panel">
-                                    <div class="panel-header">
-                                        <p class="eyebrow">Follow-up assistant</p>
-                                        <h1>Ask about the result you just saw</h1>
-                                        <p>Use this after analysis to understand what matters, what changed, and what to do next.</p>
-                                    </div>
-                                    <div id="chat-messages" class="chat-messages"></div>
-                                    <form id="chat-form" class="chat-form">
-                                        <textarea id="chat-input" rows="4" placeholder="What hurts my budget most right now?" required></textarea>
-                                        <button type="submit" class="primary-btn">Send</button>
-                                    </form>
-                                </div>
-                                <aside class="panel ai-side-panel">
-                                    <div class="panel-header">
-                                        <p class="eyebrow">Follow-up prompts</p>
-                                        <h2>Ask sharper questions</h2>
-                                    </div>
-                                    <div class="prompt-suggestions">
-                                        <button class="prompt-chip" type="button" data-prompt="What hurts my budget the most right now?">What hurts my budget the most?</button>
-                                        <button class="prompt-chip" type="button" data-prompt="What changed compared with the previous period?">What changed this period?</button>
-                                        <button class="prompt-chip" type="button" data-prompt="What should I do next to improve my finances?">What should I do next?</button>
-                                        <button class="prompt-chip" type="button" data-prompt="Where can I realistically save money without changing everything?">Where can I realistically save money?</button>
-                                    </div>
-                                </aside>
-                            </div>
-                        </section>
-                    </div>
+                <div class="form-group">
+                    <input type="email" id="register-email" placeholder="Email" required>
                 </div>
-            </section>
-        </main>
+                <div class="form-group">
+                    <input type="password" id="register-password" placeholder="Пароль (мін. 8 символів)" required>
+                </div>
+                <button type="submit" class="auth-btn">Зареєструватись</button>
+                <button type="button" id="switch-to-login" class="auth-link">Вже маю акаунт</button>
+            </form>
+
+            <div id="verify-panel" class="auth-form hidden">
+                <p class="verify-text">Токен верифікації:</p>
+                <input type="text" id="verify-token" readonly>
+                <button type="button" id="verify-btn" class="auth-btn">Підтвердити</button>
+                <button type="button" id="back-to-login" class="auth-link">Назад</button>
+            </div>
+        </div>
     </div>
 
-    <div id="toast" class="toast hidden"></div>
+    <!-- Main App Screen -->
+    <div id="main-screen" class="screen hidden">
+        <!-- Header -->
+        <header class="app-header">
+            <button id="filter-btn" class="header-btn" data-testid="filter-btn">
+                <i class="fas fa-filter"></i>
+            </button>
+            <div class="header-title" data-testid="header-title">
+                <span id="account-name">Усі рахунки</span>
+            </div>
+            <div class="header-actions">
+                <button id="search-btn" class="header-btn" data-testid="search-btn">
+                    <i class="fas fa-search"></i>
+                </button>
+                <button id="sync-btn" class="header-btn" data-testid="sync-btn">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button id="menu-btn" class="header-btn" data-testid="menu-btn">
+                    <i class="fas fa-ellipsis-v"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Period Selector -->
+        <div class="period-selector" data-testid="period-selector">
+            <button class="period-btn" data-period="day">День</button>
+            <button class="period-btn" data-period="week">Тиждень</button>
+            <button class="period-btn active" data-period="month">Місяць</button>
+            <button class="period-btn" data-period="year">Рік</button>
+        </div>
+
+        <!-- Main Chart Area -->
+        <div class="chart-container" data-testid="chart-container">
+            <!-- Category icons will be positioned around the donut -->
+            <div id="category-icons" class="category-icons"></div>
+            
+            <!-- Center Donut Chart -->
+            <div class="donut-wrapper">
+                <canvas id="main-donut-chart"></canvas>
+                <div class="donut-center" data-testid="donut-center">
+                    <span class="income-amount" id="total-income">+0 $</span>
+                    <span class="expense-amount" id="total-expense">-0 $</span>
+                    <span class="balance-amount" id="period-balance">0 $</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Balance Bar -->
+        <div class="balance-bar" data-testid="balance-bar">
+            <div class="balance-lines">
+                <span></span><span></span><span></span>
+            </div>
+            <div class="balance-display">
+                <span>Баланс</span>
+                <strong id="total-balance">0 $</strong>
+            </div>
+            <div class="balance-lines">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons" data-testid="action-buttons">
+            <button id="add-expense-btn" class="action-btn expense-btn" data-testid="add-expense-btn">
+                <i class="fas fa-minus"></i>
+            </button>
+            <button id="add-income-btn" class="action-btn income-btn" data-testid="add-income-btn">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+
+        <!-- AI Chat Floating Button -->
+        <button id="ai-chat-btn" class="ai-chat-fab" data-testid="ai-chat-btn">
+            <i class="fas fa-robot"></i>
+        </button>
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <div id="transaction-modal" class="modal hidden" data-testid="transaction-modal">
+        <div class="modal-content transaction-modal-content">
+            <div class="modal-header">
+                <button id="close-transaction-modal" class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h2 id="transaction-modal-title">Нова витрата</h2>
+                <button id="toggle-calculator" class="modal-action">
+                    <i class="fas fa-calculator"></i>
+                </button>
+            </div>
+
+            <div class="transaction-date" id="transaction-date-wrapper" data-testid="transaction-date">
+                <i class="fas fa-calendar-alt"></i>
+                <span id="transaction-date-display">Сьогодні</span>
+                <input type="date" id="transaction-date-input" class="hidden">
+            </div>
+
+            <div class="amount-display" data-testid="amount-display">
+                <span class="currency-badge">USD</span>
+                <input type="text" id="amount-input" value="0" readonly>
+                <button id="backspace-btn" class="backspace-btn">
+                    <i class="fas fa-backspace"></i>
+                </button>
+            </div>
+
+            <div class="note-input" data-testid="note-input">
+                <i class="fas fa-pen"></i>
+                <input type="text" id="note-input-field" placeholder="Додати нотатку">
+            </div>
+
+            <!-- Category Grid -->
+            <div id="category-grid" class="category-grid" data-testid="category-grid"></div>
+
+            <!-- Numpad -->
+            <div class="numpad" data-testid="numpad">
+                <button class="num-btn" data-value="1">1</button>
+                <button class="num-btn" data-value="2">2</button>
+                <button class="num-btn" data-value="3">3</button>
+                <button class="num-btn op-btn" data-value="+">+</button>
+                <button class="num-btn" data-value="4">4</button>
+                <button class="num-btn" data-value="5">5</button>
+                <button class="num-btn" data-value="6">6</button>
+                <button class="num-btn op-btn" data-value="-">−</button>
+                <button class="num-btn" data-value="7">7</button>
+                <button class="num-btn" data-value="8">8</button>
+                <button class="num-btn" data-value="9">9</button>
+                <button class="num-btn op-btn" data-value="*">×</button>
+                <button class="num-btn" data-value=".">.</button>
+                <button class="num-btn" data-value="0">0</button>
+                <button class="num-btn" data-value="=">=</button>
+                <button class="num-btn op-btn" data-value="/">÷</button>
+            </div>
+
+            <button id="select-category-btn" class="select-category-btn" data-testid="select-category-btn">
+                ВИБІР КАТЕГОРІЇ
+            </button>
+        </div>
+    </div>
+
+    <!-- AI Input Modal (Natural Language) -->
+    <div id="ai-input-modal" class="modal hidden" data-testid="ai-input-modal">
+        <div class="modal-content ai-input-modal-content">
+            <div class="modal-header">
+                <button id="close-ai-input-modal" class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h2>AI Запис транзакцій</h2>
+                <button id="send-ai-input" class="modal-action">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+            
+            <div class="ai-input-area">
+                <textarea id="ai-transaction-input" placeholder="Напишіть транзакції неформально, наприклад:
+- Вчора кава 5 доларів
+- Сьогодні зарплата 2000 usd
+- Позавчора таксі 15$, обід 12$
+
+AI розпарсить автоматично" rows="6" data-testid="ai-transaction-input"></textarea>
+                
+                <div class="ai-examples">
+                    <p>Приклади:</p>
+                    <button class="example-chip" data-example="Вчора продукти 50 доларів">Вчора продукти 50$</button>
+                    <button class="example-chip" data-example="Зарплата 2500 usd">Зарплата 2500 usd</button>
+                    <button class="example-chip" data-example="Кава 5$, обід 15$, таксі 10$">Кілька записів</button>
+                </div>
+            </div>
+
+            <div id="ai-parse-preview" class="ai-parse-preview hidden" data-testid="ai-parse-preview">
+                <h3>Розпізнані транзакції:</h3>
+                <div id="parsed-transactions-list"></div>
+                <div class="ai-preview-actions">
+                    <button id="confirm-ai-transactions" class="confirm-btn">Зберегти всі</button>
+                    <button id="discard-ai-transactions" class="discard-btn">Скасувати</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Chat Modal -->
+    <div id="ai-chat-modal" class="modal hidden" data-testid="ai-chat-modal">
+        <div class="modal-content chat-modal-content">
+            <div class="chat-header">
+                <div class="chat-title">
+                    <i class="fas fa-robot"></i>
+                    <span>AI Помічник</span>
+                </div>
+                <button id="close-chat-modal" class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div id="chat-messages" class="chat-messages" data-testid="chat-messages">
+                <div class="chat-message assistant">
+                    <p>Привіт! Я ваш фінансовий AI помічник. Можу аналізувати ваші витрати, давати поради та відповідати на питання про ваші фінанси.</p>
+                </div>
+            </div>
+
+            <div class="chat-suggestions" data-testid="chat-suggestions">
+                <button class="suggestion-chip" data-prompt="Де я витрачаю найбільше?">Де витрачаю найбільше?</button>
+                <button class="suggestion-chip" data-prompt="Як покращити мої фінанси?">Як покращити?</button>
+                <button class="suggestion-chip" data-prompt="Аналіз витрат за місяць">Аналіз за місяць</button>
+            </div>
+
+            <form id="chat-form" class="chat-input-area" data-testid="chat-form">
+                <input type="text" id="chat-input" placeholder="Запитайте про ваші фінанси..." data-testid="chat-input">
+                <button type="submit" class="send-btn" data-testid="send-chat-btn">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Side Menu -->
+    <div id="side-menu" class="side-menu hidden" data-testid="side-menu">
+        <div class="menu-overlay" id="menu-overlay"></div>
+        <div class="menu-content">
+            <div class="menu-header">
+                <span id="menu-user-name">Користувач</span>
+                <span id="menu-user-email" class="menu-email"></span>
+            </div>
+            <nav class="menu-nav">
+                <button class="menu-item" data-action="categories" data-testid="menu-categories">
+                    <i class="fas fa-tags"></i>
+                    <span>Категорії</span>
+                </button>
+                <button class="menu-item" data-action="accounts" data-testid="menu-accounts">
+                    <i class="fas fa-wallet"></i>
+                    <span>Рахунки</span>
+                </button>
+                <button class="menu-item" data-action="transactions" data-testid="menu-transactions">
+                    <i class="fas fa-list"></i>
+                    <span>Всі транзакції</span>
+                </button>
+                <button class="menu-item" data-action="ai-input" data-testid="menu-ai-input">
+                    <i class="fas fa-magic"></i>
+                    <span>AI запис</span>
+                </button>
+                <button class="menu-item" data-action="settings" data-testid="menu-settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Налаштування</span>
+                </button>
+                <button class="menu-item logout" data-action="logout" data-testid="menu-logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Вийти</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Transactions List Modal -->
+    <div id="transactions-modal" class="modal hidden" data-testid="transactions-modal">
+        <div class="modal-content transactions-list-modal">
+            <div class="modal-header">
+                <button id="close-transactions-modal" class="modal-close">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2>Транзакції</h2>
+                <div></div>
+            </div>
+            <div id="transactions-list" class="transactions-list" data-testid="transactions-list"></div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden" data-testid="toast"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="js/api.js"></script>
-    <script src="js/transactions.js"></script>
-    <script src="js/charts.js"></script>
-    <script src="js/app.js"></script>
+    <script src="js/mobile-app.js"></script>
 </body>
 </html>
