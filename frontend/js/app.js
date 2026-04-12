@@ -1,4 +1,4 @@
-const CATEGORY_OPTIONS = [
+const EXPENSE_CATEGORIES = [
     "food",
     "transport",
     "housing",
@@ -7,12 +7,18 @@ const CATEGORY_OPTIONS = [
     "shopping",
     "health",
     "education",
+    "other"
+];
+
+const INCOME_CATEGORIES = [
     "salary",
     "freelance",
     "other"
 ];
 
+const CATEGORY_OPTIONS = [...new Set([...EXPENSE_CATEGORIES, ...INCOME_CATEGORIES])];
 const TYPE_OPTIONS = ["income", "expense"];
+const PERIOD_OPTIONS = ["month", "week", "year", "day"];
 
 const authState = {
     token: authApi.getToken(),
@@ -20,11 +26,19 @@ const authState = {
     survey: null
 };
 
-let transactions = [];
-let latestSummary = null;
-let parsedTransactionDraft = null;
-let editingTransactionId = null;
-let pendingVerification = null;
+const appState = {
+    selectedPeriod: "month",
+    savedTransactions: [],
+    latestSummary: null,
+    latestInsights: [],
+    transientAnalysis: null,
+    parsedTransactionDraft: null,
+    editingTransactionId: null,
+    pendingVerification: null,
+    entryType: "expense",
+    entryAmount: "0",
+    entryCategory: "food"
+};
 
 const views = {
     landing: document.getElementById("view-landing"),
@@ -33,119 +47,136 @@ const views = {
     app: document.getElementById("view-app")
 };
 
-const pages = {
-    analyze: document.getElementById("page-analyze"),
-    details: document.getElementById("page-details"),
-    ai: document.getElementById("page-ai")
+const elements = {
+    toast: document.getElementById("toast"),
+    lastUpdated: document.getElementById("last-updated"),
+    primaryInsightTitle: document.getElementById("primary-insight-title"),
+    primaryInsightMessage: document.getElementById("primary-insight-message"),
+    dashboardStatus: document.getElementById("dashboard-status"),
+    savingsRate: document.getElementById("savings-rate"),
+    income: document.getElementById("income"),
+    expenses: document.getElementById("expenses"),
+    balance: document.getElementById("balance"),
+    radialLegend: document.getElementById("radial-legend"),
+    trackerCurrencyLabel: document.getElementById("tracker-currency-label"),
+    insightsList: document.getElementById("insights-list"),
+    transactionsBody: document.getElementById("transactions-body"),
+    chatMessages: document.getElementById("chat-messages"),
+    lineChartCanvas: document.getElementById("line-chart"),
+    barChartCanvas: document.getElementById("bar-chart"),
+    pieChartCanvas: document.getElementById("pie-chart"),
+    statementFileInput: document.getElementById("statement-file-input"),
+    drawerBackdrop: document.getElementById("drawer-backdrop"),
+    leftDrawer: document.getElementById("left-drawer"),
+    rightDrawer: document.getElementById("right-drawer"),
+    textAnalysisSheet: document.getElementById("text-analysis-sheet"),
+    entrySheet: document.getElementById("entry-sheet"),
+    transactionsSheet: document.getElementById("transactions-sheet"),
+    manualSheet: document.getElementById("manual-sheet"),
+    chatWidget: document.getElementById("chat-widget"),
+    aiPreview: document.getElementById("ai-preview"),
+    aiPreviewContent: document.getElementById("ai-preview-content"),
+    aiText: document.getElementById("ai-text"),
+    chatInput: document.getElementById("chat-input"),
+    entrySheetTitle: document.getElementById("entry-sheet-title"),
+    entryCurrency: document.getElementById("entry-currency"),
+    entryAmountDisplay: document.getElementById("entry-amount-display"),
+    entryDate: document.getElementById("entry-date"),
+    entryNote: document.getElementById("entry-note"),
+    entryCategoryGrid: document.getElementById("entry-category-grid"),
+    entryKeypad: document.getElementById("entry-keypad"),
+    manualFormTitle: document.getElementById("manual-form-title"),
+    submitBtn: document.getElementById("submit-btn"),
+    cancelEditBtn: document.getElementById("cancel-edit-btn"),
+    nameInput: document.getElementById("name"),
+    amountInput: document.getElementById("amount"),
+    typeInput: document.getElementById("type"),
+    categoryInput: document.getElementById("category"),
+    dateInput: document.getElementById("date"),
+    filterType: document.getElementById("filter-type"),
+    filterCategory: document.getElementById("filter-category"),
+    filterFrom: document.getElementById("from-date"),
+    filterTo: document.getElementById("to-date"),
+    searchInput: document.getElementById("search"),
+    periodFilter: document.getElementById("period-filter"),
+    loginEmail: document.getElementById("login-email"),
+    loginPassword: document.getElementById("login-password"),
+    registerName: document.getElementById("register-name"),
+    registerEmail: document.getElementById("register-email"),
+    registerPassword: document.getElementById("register-password"),
+    verifyToken: document.getElementById("verify-token"),
+    authTitle: document.getElementById("auth-title"),
+    authSubtitle: document.getElementById("auth-subtitle"),
+    loginForm: document.getElementById("login-form"),
+    registerForm: document.getElementById("register-form"),
+    verifyPanel: document.getElementById("verify-panel"),
+    surveyFinancialGoal: document.getElementById("survey-financial-goal"),
+    surveyTrackerGoal: document.getElementById("survey-tracker-goal"),
+    surveyCapital: document.getElementById("survey-capital"),
+    surveyCapitalCurrency: document.getElementById("survey-capital-currency"),
+    surveyAge: document.getElementById("survey-age"),
+    surveySkills: document.getElementById("survey-skills"),
+    surveyNonFinancialGoal: document.getElementById("survey-non-financial-goal"),
+    sidebarUserEmail: document.getElementById("sidebar-user-email")
 };
 
-const toastEl = document.getElementById("toast");
-const dashboardStatus = document.getElementById("dashboard-status");
-const lastUpdatedEl = document.getElementById("last-updated");
-const insightsListEl = document.getElementById("insights-list");
-const transactionsBody = document.getElementById("transactions-body");
-const chatMessagesEl = document.getElementById("chat-messages");
+const buttons = {
+    heroStart: document.getElementById("hero-start-btn"),
+    heroLogin: document.getElementById("hero-login-btn"),
+    switchToRegister: document.getElementById("switch-to-register"),
+    switchToLogin: document.getElementById("switch-to-login"),
+    verifyAccount: document.getElementById("verify-account-btn"),
+    backToLogin: document.getElementById("back-to-login-btn"),
+    skipSurvey: document.getElementById("skip-survey-btn"),
+    openLeftDrawer: document.getElementById("open-left-drawer-btn"),
+    closeLeftDrawer: document.getElementById("close-left-drawer-btn"),
+    openRightDrawer: document.getElementById("open-right-drawer-btn"),
+    closeRightDrawer: document.getElementById("close-right-drawer-btn"),
+    openUpload: document.getElementById("open-upload-btn"),
+    triggerUpload: document.getElementById("trigger-upload-btn"),
+    openTextAnalysis: document.getElementById("open-text-analysis-btn"),
+    closeTextAnalysis: document.getElementById("close-text-analysis-btn"),
+    openSurvey: document.getElementById("open-survey-btn"),
+    openTransactions: document.getElementById("open-transactions-btn"),
+    closeTransactions: document.getElementById("close-transactions-sheet-btn"),
+    openManualMode: document.getElementById("open-manual-mode-btn"),
+    closeManual: document.getElementById("close-manual-sheet-btn"),
+    openExpenseEntry: document.getElementById("open-expense-entry-btn"),
+    openIncomeEntry: document.getElementById("open-income-entry-btn"),
+    closeEntry: document.getElementById("close-entry-sheet-btn"),
+    chatFab: document.getElementById("chat-fab-btn"),
+    closeChat: document.getElementById("close-chat-widget-btn"),
+    openDetails: document.getElementById("open-details-btn"),
+    confirmAi: document.getElementById("confirm-ai-btn"),
+    discardAi: document.getElementById("discard-ai-btn"),
+    logoutDrawer: document.getElementById("logout-drawer-btn")
+};
 
-const topbarLoginBtn = document.getElementById("go-login-btn");
-const topbarRegisterBtn = document.getElementById("go-register-btn");
-const logoutBtn = document.getElementById("logout-btn");
-const heroStartBtn = document.getElementById("hero-start-btn");
-const heroLoginBtn = document.getElementById("hero-login-btn");
-
-const loginForm = document.getElementById("login-form");
-const registerForm = document.getElementById("register-form");
-const verifyPanel = document.getElementById("verify-panel");
-const surveyForm = document.getElementById("survey-form");
-const aiParseForm = document.getElementById("ai-parse-form");
-const transactionForm = document.getElementById("transaction-form");
-const chatForm = document.getElementById("chat-form");
-
-const switchToRegisterBtn = document.getElementById("switch-to-register");
-const switchToLoginBtn = document.getElementById("switch-to-login");
-const verifyAccountBtn = document.getElementById("verify-account-btn");
-const backToLoginBtn = document.getElementById("back-to-login-btn");
-const skipSurveyBtn = document.getElementById("skip-survey-btn");
-const askFollowUpBtn = document.getElementById("ask-follow-up-btn");
-const seeDetailsBtn = document.getElementById("see-details-btn");
-
-const loginEmailInput = document.getElementById("login-email");
-const loginPasswordInput = document.getElementById("login-password");
-const registerNameInput = document.getElementById("register-name");
-const registerEmailInput = document.getElementById("register-email");
-const registerPasswordInput = document.getElementById("register-password");
-const verifyTokenInput = document.getElementById("verify-token");
-
-const surveyAgeInput = document.getElementById("survey-age");
-const surveyCapitalInput = document.getElementById("survey-capital");
-const surveyCapitalCurrencyInput = document.getElementById("survey-capital-currency");
-const surveySkillsInput = document.getElementById("survey-skills");
-const surveyFinancialGoalInput = document.getElementById("survey-financial-goal");
-const surveyTrackerGoalInput = document.getElementById("survey-tracker-goal");
-const surveyNonFinancialGoalInput = document.getElementById("survey-non-financial-goal");
-
-const balanceEl = document.getElementById("balance");
-const incomeEl = document.getElementById("income");
-const expensesEl = document.getElementById("expenses");
-const savingsRateEl = document.getElementById("savings-rate");
-const balanceNoteEl = document.getElementById("balance-note");
-const incomeNoteEl = document.getElementById("income-note");
-const expenseNoteEl = document.getElementById("expense-note");
-const savingsNoteEl = document.getElementById("savings-note");
-const primaryInsightTitleEl = document.getElementById("primary-insight-title");
-const primaryInsightMessageEl = document.getElementById("primary-insight-message");
-
-const sidebarUserNameEl = document.getElementById("sidebar-user-name");
-const sidebarUserEmailEl = document.getElementById("sidebar-user-email");
-
-const manualFormTitleEl = document.getElementById("manual-form-title");
-const submitBtn = document.getElementById("submit-btn");
-const cancelEditBtn = document.getElementById("cancel-edit-btn");
-const nameInput = document.getElementById("name");
-const amountInput = document.getElementById("amount");
-const typeInput = document.getElementById("type");
-const categoryInput = document.getElementById("category");
-const dateInput = document.getElementById("date");
-
-const searchInput = document.getElementById("search");
-const filterTypeInput = document.getElementById("filter-type");
-const filterCategoryInput = document.getElementById("filter-category");
-const fromDateInput = document.getElementById("from-date");
-const toDateInput = document.getElementById("to-date");
-const periodFilterInput = document.getElementById("period-filter");
-
-const aiTextInput = document.getElementById("ai-text");
-const aiPreviewEl = document.getElementById("ai-preview");
-const aiPreviewContentEl = document.getElementById("ai-preview-content");
-const confirmAiBtn = document.getElementById("confirm-ai-btn");
-const discardAiBtn = document.getElementById("discard-ai-btn");
-const chatInput = document.getElementById("chat-input");
-
-const pieChartCanvas = document.getElementById("pie-chart");
-const lineChartCanvas = document.getElementById("line-chart");
-const barChartCanvas = document.getElementById("bar-chart");
-
-const promptButtons = document.querySelectorAll(".prompt-chip[data-prompt]");
-const promptFillButtons = document.querySelectorAll(".prompt-chip[data-fill]");
+const forms = {
+    survey: document.getElementById("survey-form"),
+    login: document.getElementById("login-form"),
+    register: document.getElementById("register-form"),
+    aiParse: document.getElementById("ai-parse-form"),
+    transaction: document.getElementById("transaction-form"),
+    chat: document.getElementById("chat-form")
+};
 
 function showToast(message, kind = "info") {
-    toastEl.textContent = message;
-    toastEl.className = `toast ${kind}`;
-    setTimeout(() => {
-        toastEl.className = "toast hidden";
+    elements.toast.textContent = message;
+    elements.toast.className = `toast ${kind}`;
+    window.clearTimeout(showToast.timer);
+    showToast.timer = window.setTimeout(() => {
+        elements.toast.className = "toast hidden";
     }, 2800);
 }
 
-function setStatus(message) {
-    dashboardStatus.textContent = message;
-}
-
-function formatMoney(value, currency = "PLN") {
-    const amount = Number(value || 0);
-    return `${amount.toFixed(2)} ${currency}`;
-}
-
-function getTrackerCurrency() {
-    return authState.survey?.capital_currency || "PLN";
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
 }
 
 function toInputDate(value) {
@@ -156,14 +187,22 @@ function toInputDate(value) {
     return `${year}-${month}-${day}`;
 }
 
-function setSelectOptions(selectElement, values, withAllOption = false, labelPrefix = "") {
-    selectElement.innerHTML = "";
+function formatMoney(value, currency = "PLN", digits = 2) {
+    const amount = Number(value || 0);
+    return `${amount.toFixed(digits)} ${currency}`;
+}
 
+function getTrackerCurrency() {
+    return authState.survey?.capital_currency || appState.latestSummary?.base_currency || "PLN";
+}
+
+function setSelectOptions(selectElement, values, withAllOption = false) {
+    selectElement.innerHTML = "";
     if (withAllOption) {
-        const option = document.createElement("option");
-        option.value = "all";
-        option.textContent = labelPrefix || "All";
-        selectElement.appendChild(option);
+        const allOption = document.createElement("option");
+        allOption.value = "all";
+        allOption.textContent = "All";
+        selectElement.appendChild(allOption);
     }
 
     values.forEach((value) => {
@@ -180,255 +219,416 @@ function setActiveView(viewName) {
     });
 }
 
-function setActivePage(pageName) {
-    Object.entries(pages).forEach(([key, element]) => {
-        element.classList.toggle("active", key === pageName);
-    });
-
-    document.querySelectorAll(".nav-btn").forEach((button) => {
-        button.classList.toggle("active", button.dataset.route === `#/app/${pageName}`);
-    });
-}
-
 function showAuthMode(mode) {
     const loginVisible = mode === "login";
     const registerVisible = mode === "register";
     const verifyVisible = mode === "verify";
-    loginForm.classList.toggle("hidden", !loginVisible);
-    registerForm.classList.toggle("hidden", !registerVisible);
-    verifyPanel.classList.toggle("hidden", !verifyVisible);
+    elements.loginForm.classList.toggle("hidden", !loginVisible);
+    elements.registerForm.classList.toggle("hidden", !registerVisible);
+    elements.verifyPanel.classList.toggle("hidden", !verifyVisible);
 
     if (loginVisible) {
-        document.getElementById("auth-title").textContent = "Login";
-        document.getElementById("auth-subtitle").textContent = "Open your finance review workspace.";
-        return;
+        elements.authTitle.textContent = "Welcome back";
+        elements.authSubtitle.textContent = "Open your personal money review workspace.";
+    } else if (registerVisible) {
+        elements.authTitle.textContent = "Create account";
+        elements.authSubtitle.textContent = "Create an account only if you want to save analyses and come back later.";
+    } else {
+        elements.authTitle.textContent = "Verify email";
+        elements.authSubtitle.textContent = "Confirm your account and continue to the workspace.";
     }
-
-    if (registerVisible) {
-        document.getElementById("auth-title").textContent = "Create account";
-        document.getElementById("auth-subtitle").textContent = "Use an account only if you want to save sessions and return later.";
-        return;
-    }
-
-    document.getElementById("auth-title").textContent = "Verify account";
-    document.getElementById("auth-subtitle").textContent = "Confirm your email, then continue.";
 }
 
-function updateTopbarAuthState() {
-    const isAuthenticated = Boolean(authState.token && authState.user);
-    topbarLoginBtn.classList.toggle("hidden", isAuthenticated);
-    topbarRegisterBtn.classList.toggle("hidden", isAuthenticated);
-    logoutBtn.classList.toggle("hidden", !isAuthenticated);
+function showSheet(sheet) {
+    [elements.textAnalysisSheet, elements.entrySheet, elements.transactionsSheet, elements.manualSheet].forEach((item) => {
+        item.classList.toggle("hidden", item !== sheet);
+    });
+    closeDrawers();
 }
 
-function openLoginView(prefill = {}) {
-    setActiveView("auth");
-    showAuthMode("login");
-    loginEmailInput.value = prefill.email || "";
-    loginPasswordInput.value = prefill.password || "";
+function hideSheets() {
+    [elements.textAnalysisSheet, elements.entrySheet, elements.transactionsSheet, elements.manualSheet].forEach((sheet) => {
+        sheet.classList.add("hidden");
+    });
 }
 
-function openRegisterView(prefill = {}) {
-    setActiveView("auth");
-    showAuthMode("register");
-    registerNameInput.value = prefill.name || "";
-    registerEmailInput.value = prefill.email || "";
+function openDrawer(drawer) {
+    closeDrawers();
+    drawer.classList.add("open");
+    elements.drawerBackdrop.classList.remove("hidden");
 }
 
-function openVerifyView(token, credentials = null) {
-    setActiveView("auth");
-    showAuthMode("verify");
-    verifyTokenInput.value = token || "";
-    pendingVerification = { token, credentials };
+function closeDrawers() {
+    elements.leftDrawer.classList.remove("open");
+    elements.rightDrawer.classList.remove("open");
+    elements.drawerBackdrop.classList.add("hidden");
 }
 
-function resetManualForm() {
-    editingTransactionId = null;
-    transactionForm.reset();
-    dateInput.value = toInputDate();
-    submitBtn.textContent = "Add transaction";
-    manualFormTitleEl.textContent = "Add transaction";
-    cancelEditBtn.classList.add("hidden");
+function openChatWidget() {
+    elements.chatWidget.classList.remove("hidden");
 }
 
-function normalizeTransaction(transaction) {
+function closeChatWidget() {
+    elements.chatWidget.classList.add("hidden");
+}
+
+function discardAiPreview() {
+    appState.parsedTransactionDraft = null;
+    elements.aiPreview.classList.add("hidden");
+    elements.aiPreviewContent.innerHTML = "";
+}
+
+function getCategoryPalette(index) {
+    const palette = [
+        "#6fa9ff",
+        "#5dd0a5",
+        "#f3b24f",
+        "#f57ac4",
+        "#9d7ef8",
+        "#8f98a8",
+        "#ff8a4c",
+        "#8be0d1"
+    ];
+    return palette[index % palette.length];
+}
+
+function normalizeTransaction(transaction, fallbackCurrency = "PLN") {
     return {
         ...transaction,
-        name: transaction.note || "Untitled transaction",
-        date: toInputDate(transaction.transaction_date),
-        amount: Number(transaction.amount),
-        originalAmount: Number(transaction.amount),
-        convertedAmount: Number(transaction.amount_pln ?? transaction.amount),
-        exchangeRate: Number(transaction.exchange_rate ?? 1),
-        source: transaction.source || "manual"
+        id: transaction.id || crypto.randomUUID(),
+        name: transaction.note || transaction.name || "Untitled transaction",
+        date: toInputDate(transaction.transaction_date || transaction.date),
+        originalAmount: Number(transaction.amount || 0),
+        convertedAmount: Number(transaction.amount_pln ?? transaction.converted_amount ?? transaction.amount ?? 0),
+        currency: transaction.currency || fallbackCurrency,
+        source: transaction.source || "analysis"
     };
 }
 
-function isEmailAlreadyRegisteredError(error) {
-    return typeof error?.message === "string" && error.message.toLowerCase().includes("already registered");
+function buildPeriodBreakdown(transactions) {
+    const grouped = new Map();
+
+    [...transactions]
+        .sort((a, b) => new Date(a.transaction_date) - new Date(b.transaction_date))
+        .forEach((transaction) => {
+            const date = new Date(transaction.transaction_date);
+            const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+            const label = date.toLocaleDateString("en-US", { month: "short" });
+            if (!grouped.has(key)) {
+                grouped.set(key, {
+                    period: key,
+                    label,
+                    income: 0,
+                    expense: 0
+                });
+            }
+
+            const bucket = grouped.get(key);
+            const amount = Number(transaction.amount_pln ?? transaction.amount ?? 0);
+            if (transaction.type === "income") {
+                bucket.income += amount;
+            } else {
+                bucket.expense += amount;
+            }
+        });
+
+    return Array.from(grouped.values());
 }
 
-function toTransactionPayload(source = "manual") {
+function buildSummaryFromTransient(analysis) {
+    const transactions = (analysis?.transactions || []).map((transaction) => normalizeTransaction(transaction, analysis.summary.currency || "PLN"));
+    const categoryTotals = new Map();
+    let income = 0;
+    let expense = 0;
+
+    transactions.forEach((transaction) => {
+        const amount = Number(transaction.amount_pln ?? transaction.amount ?? 0);
+        if (transaction.type === "income") {
+            income += amount;
+        } else {
+            expense += amount;
+            categoryTotals.set(transaction.category, (categoryTotals.get(transaction.category) || 0) + amount);
+        }
+    });
+
+    const categoryBreakdown = Array.from(categoryTotals.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([category, amount]) => ({ category, amount }));
+
     return {
-        note: nameInput.value.trim(),
-        amount: Number(amountInput.value),
-        type: typeInput.value,
-        category: categoryInput.value,
-        transaction_date: new Date(`${dateInput.value}T12:00:00`).toISOString(),
-        currency: getTrackerCurrency(),
-        source
+        balance: Number(analysis.summary.net_total || 0),
+        starting_balance: 0,
+        income_total: Number(analysis.summary.income_total || 0),
+        expense_total: Number(analysis.summary.expense_total || 0),
+        base_currency: analysis.summary.currency || "PLN",
+        selected_period: appState.selectedPeriod,
+        category_breakdown: categoryBreakdown,
+        period_breakdown: buildPeriodBreakdown(transactions),
+        transaction_count: transactions.length
     };
 }
 
-function renderSummary(summary) {
-    const baseCurrency = summary?.base_currency || getTrackerCurrency();
-    const income = Number(summary?.income_total || 0);
-    const expense = Number(summary?.expense_total || 0);
-    const savingsRate = income > 0 ? (((income - expense) / income) * 100) : 0;
-    const periodLabel = summary?.selected_period || periodFilterInput.value || "month";
+function getDisplaySummary() {
+    if (appState.transientAnalysis) {
+        return buildSummaryFromTransient(appState.transientAnalysis);
+    }
+    return appState.latestSummary;
+}
 
-    balanceEl.textContent = formatMoney(summary?.balance || 0, baseCurrency);
-    incomeEl.textContent = formatMoney(income, baseCurrency);
-    expensesEl.textContent = formatMoney(expense, baseCurrency);
-    savingsRateEl.textContent = `${savingsRate.toFixed(1)}%`;
+function getDisplayTransactions() {
+    if (appState.transientAnalysis) {
+        return appState.transientAnalysis.transactions.map((item) => normalizeTransaction(item, appState.transientAnalysis.summary.currency || "PLN"));
+    }
+    return appState.savedTransactions;
+}
 
-    balanceNoteEl.textContent = `Including starting balance · ${periodLabel}`;
-    incomeNoteEl.textContent = `Tracked inflows · ${periodLabel}`;
-    expenseNoteEl.textContent = `Tracked outflows · ${periodLabel}`;
-    savingsNoteEl.textContent = income > 0 ? `${(income - expense).toFixed(2)} ${baseCurrency} net` : "No income recorded";
+function getDisplayInsights() {
+    if (appState.transientAnalysis) {
+        const insights = appState.transientAnalysis.insights || [];
+        if (!insights.length) {
+            return [
+                { title: "Analysis ready", message: "We parsed the uploaded data and prepared a compact review." }
+            ];
+        }
 
-    lastUpdatedEl.textContent = new Date().toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric"
+        return insights.map((item, index) => ({
+            title: index === 0 ? "Main finding" : `Insight ${index + 1}`,
+            message: item
+        }));
+    }
+
+    return appState.latestInsights;
+}
+
+function renderRadialLegend(summary) {
+    elements.radialLegend.innerHTML = "";
+    const categories = summary?.category_breakdown || [];
+
+    if (!categories.length) {
+        elements.radialLegend.innerHTML = '<p class="empty-legend">No expense categories yet.</p>';
+        return;
+    }
+
+    const total = categories.reduce((sum, item) => sum + Number(item.amount || 0), 0) || 1;
+    categories.slice(0, 6).forEach((item, index) => {
+        const percent = Math.round((Number(item.amount || 0) / total) * 100);
+        const legendItem = document.createElement("div");
+        legendItem.className = "legend-item";
+        legendItem.innerHTML = `
+            <span class="legend-dot" style="background:${getCategoryPalette(index)}"></span>
+            <strong>${escapeHtml(item.category)}</strong>
+            <small>${percent}%</small>
+        `;
+        elements.radialLegend.appendChild(legendItem);
     });
 }
 
 function renderInsights(insights) {
     const list = insights?.length
         ? insights
-        : [
-            {
-                title: "No analysis yet",
-                message: "Add transactions or run the parser to generate a focused finance review."
-            }
-        ];
+        : [{ title: "No analysis yet", message: "Paste spending, upload a file, or add a transaction to see a review." }];
 
     const [primary, ...secondary] = list;
-    primaryInsightTitleEl.textContent = primary.title;
-    primaryInsightMessageEl.textContent = primary.message;
+    elements.primaryInsightTitle.textContent = primary.title;
+    elements.primaryInsightMessage.textContent = primary.message;
+    elements.insightsList.innerHTML = "";
 
-    insightsListEl.innerHTML = "";
-    secondary.slice(0, 3).forEach((insight) => {
+    secondary.slice(0, 3).forEach((item) => {
         const card = document.createElement("article");
         card.className = "insight-card";
-        card.innerHTML = `<h3>${insight.title}</h3><p>${insight.message}</p>`;
-        insightsListEl.appendChild(card);
+        card.innerHTML = `<h3>${escapeHtml(item.title)}</h3><p>${escapeHtml(item.message)}</p>`;
+        elements.insightsList.appendChild(card);
     });
 
     if (!secondary.length) {
-        const placeholder = document.createElement("article");
-        placeholder.className = "insight-card";
-        placeholder.innerHTML = "<h3>More context appears here</h3><p>As soon as there is enough data, we will highlight extra patterns and recommendations.</p>";
-        insightsListEl.appendChild(placeholder);
+        const fallback = document.createElement("article");
+        fallback.className = "insight-card";
+        fallback.innerHTML = "<h3>Ready for follow-up</h3><p>Open the AI bubble and ask what changed, where you overspend, or what to fix next.</p>";
+        elements.insightsList.appendChild(fallback);
     }
 }
 
-function renderTransactions(list) {
-    transactionsBody.innerHTML = "";
-
-    if (!list.length) {
-        transactionsBody.innerHTML = '<tr><td colspan="7">No transactions found for the current filters.</td></tr>';
+function renderSummary(summary) {
+    if (!summary) {
         return;
     }
 
-    list.forEach((transaction) => {
-        const row = document.createElement("tr");
-        const isIncome = transaction.type === "income";
-        const usesOriginalCurrency = (transaction.currency || "PLN") !== getTrackerCurrency();
-        const amountHtml = usesOriginalCurrency
-            ? `
-                <div class="${isIncome ? "amount-positive" : "amount-negative"}">${isIncome ? "+" : "-"}${formatMoney(transaction.originalAmount, transaction.currency || "PLN")}</div>
-                <small class="amount-secondary">~ ${formatMoney(transaction.convertedAmount, "PLN")}</small>
-            `
-            : `<div class="${isIncome ? "amount-positive" : "amount-negative"}">${isIncome ? "+" : "-"}${formatMoney(transaction.originalAmount, transaction.currency || getTrackerCurrency())}</div>`;
+    const currency = summary.base_currency || "PLN";
+    const income = Number(summary.income_total || 0);
+    const expense = Number(summary.expense_total || 0);
+    const balance = Number(summary.balance || 0);
+    const savingsRate = income > 0 ? ((income - expense) / income) * 100 : 0;
 
-        row.innerHTML = `
-            <td>${transaction.date}</td>
-            <td><div class="transaction-note">${transaction.name}</div></td>
-            <td><span class="tag-chip">${transaction.category}</span></td>
-            <td><span class="tag-chip ${isIncome ? "tag-income" : "tag-expense"}">${transaction.type}</span></td>
-            <td><span class="tag-chip">${transaction.source}</span></td>
-            <td>${amountHtml}</td>
-            <td>
-                <button class="small-btn edit-btn" data-id="${transaction.id}">Edit</button>
-                <button class="small-btn delete-btn" data-id="${transaction.id}">Delete</button>
-            </td>
-        `;
-        transactionsBody.appendChild(row);
+    elements.income.textContent = formatMoney(income, currency);
+    elements.expenses.textContent = formatMoney(expense, currency);
+    elements.balance.textContent = formatMoney(balance, currency);
+    elements.savingsRate.textContent = `${savingsRate.toFixed(1)}%`;
+    elements.trackerCurrencyLabel.textContent = currency;
+    elements.entryCurrency.textContent = currency;
+    elements.lastUpdated.textContent = new Date().toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit"
     });
+
+    const statusLabel = appState.transientAnalysis
+        ? `Showing imported review · ${summary.transaction_count} parsed transaction(s)`
+        : `Saved tracker view · ${summary.selected_period}`;
+    elements.dashboardStatus.textContent = statusLabel;
+    renderRadialLegend(summary);
 }
 
-function renderAiPreview(parsed) {
-    const originalAmount = Number(parsed.amount || 0);
-    const convertedAmount = Number(parsed.amount_pln ?? parsed.amount ?? 0);
-    aiPreviewContentEl.innerHTML = `
-        <div><span>Type</span><strong>${parsed.type}</strong></div>
-        <div><span>Category</span><strong>${parsed.category}</strong></div>
-        <div><span>Amount</span><strong>${formatMoney(originalAmount, parsed.currency || "PLN")}</strong></div>
-        <div><span>Stored as</span><strong>${formatMoney(convertedAmount, "PLN")}</strong></div>
-        <div><span>Date</span><strong>${toInputDate(parsed.transaction_date)}</strong></div>
-        <div class="full-span"><span>Note</span><strong>${parsed.note}</strong></div>
+function renderAiPreview(draft) {
+    const transactions = draft?.transactions || [];
+    const summary = buildSummaryFromTransient(draft);
+    const topCategory = summary.category_breakdown[0]?.category || "other";
+    elements.aiPreviewContent.innerHTML = `
+        <div><span>Parsed</span><strong>${transactions.length} item(s)</strong></div>
+        <div><span>Income</span><strong>${formatMoney(summary.income_total, summary.base_currency)}</strong></div>
+        <div><span>Expenses</span><strong>${formatMoney(summary.expense_total, summary.base_currency)}</strong></div>
+        <div><span>Main category</span><strong>${escapeHtml(topCategory)}</strong></div>
+        <div class="full-span"><span>Next</span><strong>Review the overview, then save parsed transactions if it looks correct.</strong></div>
     `;
-    aiPreviewEl.classList.remove("hidden");
+    elements.aiPreview.classList.remove("hidden");
 }
 
-function discardAiPreview() {
-    parsedTransactionDraft = null;
-    aiPreviewEl.classList.add("hidden");
-    aiPreviewContentEl.innerHTML = "";
-}
-
-function renderChatMessage(role, message) {
-    const item = document.createElement("article");
-    item.className = `chat-message ${role}`;
-    item.innerHTML = `<p>${message}</p>`;
-    chatMessagesEl.appendChild(item);
-    chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
-}
-
-function fillSurveyForm(survey) {
-    surveyAgeInput.value = survey?.age || "";
-    surveyCapitalInput.value = survey?.capital || "";
-    surveyCapitalCurrencyInput.value = survey?.capital_currency || "PLN";
-    surveySkillsInput.value = Array.isArray(survey?.skills) ? survey.skills.join(", ") : "";
-    surveyFinancialGoalInput.value = survey?.financial_goal || "";
-    surveyTrackerGoalInput.value = survey?.tracker_goal || "";
-    surveyNonFinancialGoalInput.value = survey?.non_financial_goal || "";
-}
-
-function updateSidebarUser() {
-    sidebarUserNameEl.textContent = authState.user?.name || "Your workspace";
-    sidebarUserEmailEl.textContent = authState.user?.email || "";
-}
-
-function applyFilters() {
-    const filtered = getFilteredTransactions(transactions, {
-        searchValue: searchInput.value || "",
-        typeValue: filterTypeInput.value,
-        categoryValue: filterCategoryInput.value,
-        fromDateValue: fromDateInput.value,
-        toDateValue: toDateInput.value
+function renderTransactionsList() {
+    const filtered = getFilteredTransactions(getDisplayTransactions(), {
+        searchValue: elements.searchInput.value || "",
+        typeValue: elements.filterType.value,
+        categoryValue: elements.filterCategory.value,
+        fromDateValue: elements.filterFrom.value,
+        toDateValue: elements.filterTo.value
     });
 
-    renderTransactions(filtered);
+    elements.transactionsBody.innerHTML = "";
+    if (!filtered.length) {
+        elements.transactionsBody.innerHTML = '<div class="empty-state small">No transactions match the current filters.</div>';
+        return;
+    }
+
+    const showActions = !appState.transientAnalysis;
+    filtered.forEach((transaction) => {
+        const isIncome = transaction.type === "income";
+        const card = document.createElement("article");
+        card.className = "transaction-card";
+        card.innerHTML = `
+            <div class="transaction-card-top">
+                <div>
+                    <strong>${escapeHtml(transaction.name)}</strong>
+                    <p>${escapeHtml(transaction.date)} · ${escapeHtml(transaction.category)}</p>
+                </div>
+                <div class="transaction-amount ${isIncome ? "positive" : "negative"}">
+                    ${isIncome ? "+" : "-"}${formatMoney(transaction.originalAmount, transaction.currency || getTrackerCurrency())}
+                </div>
+            </div>
+            <div class="transaction-card-bottom">
+                <span class="pill">${escapeHtml(transaction.type)}</span>
+                <span class="pill">${escapeHtml(transaction.source || "manual")}</span>
+                ${showActions ? `
+                    <div class="transaction-actions">
+                        <button type="button" class="tiny-btn edit-btn" data-action="edit" data-id="${transaction.id}">Edit</button>
+                        <button type="button" class="tiny-btn delete-btn" data-action="delete" data-id="${transaction.id}">Delete</button>
+                    </div>
+                ` : ""}
+            </div>
+        `;
+        elements.transactionsBody.appendChild(card);
+    });
+}
+
+function renderEntryCategories() {
+    elements.entryCategoryGrid.innerHTML = "";
+    const categories = appState.entryType === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+
+    categories.forEach((category) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `category-pill ${appState.entryCategory === category ? "active" : ""}`;
+        button.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+        button.addEventListener("click", () => {
+            appState.entryCategory = category;
+            renderEntryCategories();
+        });
+        elements.entryCategoryGrid.appendChild(button);
+    });
+}
+
+function updateEntryDisplay() {
+    elements.entryAmountDisplay.textContent = appState.entryAmount;
+    elements.entrySheetTitle.textContent = appState.entryType === "income" ? "New income" : "New expense";
+    elements.entryCurrency.textContent = getTrackerCurrency();
+    renderEntryCategories();
+}
+
+function openEntrySheet(type) {
+    appState.entryType = type;
+    appState.entryAmount = "0";
+    appState.entryCategory = type === "income" ? "salary" : "food";
+    elements.entryDate.value = toInputDate();
+    elements.entryNote.value = "";
+    updateEntryDisplay();
+    showSheet(elements.entrySheet);
+}
+
+function openManualSheet(transaction = null) {
+    if (transaction) {
+        appState.editingTransactionId = transaction.id;
+        elements.manualFormTitle.textContent = "Edit transaction";
+        elements.submitBtn.textContent = "Save changes";
+        elements.cancelEditBtn.classList.remove("hidden");
+        elements.nameInput.value = transaction.name;
+        elements.amountInput.value = transaction.originalAmount;
+        elements.typeInput.value = transaction.type;
+        elements.categoryInput.value = transaction.category;
+        elements.dateInput.value = transaction.date;
+    } else {
+        appState.editingTransactionId = null;
+        elements.manualFormTitle.textContent = "Manual input";
+        elements.submitBtn.textContent = "Add transaction";
+        elements.cancelEditBtn.classList.add("hidden");
+        forms.transaction.reset();
+        elements.dateInput.value = toInputDate();
+        elements.typeInput.value = "expense";
+        elements.categoryInput.value = "food";
+    }
+
+    showSheet(elements.manualSheet);
+}
+
+function closeAllOverlays() {
+    hideSheets();
+    closeDrawers();
+    closeChatWidget();
+}
+
+function fillSurveyForm() {
+    elements.surveyFinancialGoal.value = authState.survey?.financial_goal || "";
+    elements.surveyTrackerGoal.value = authState.survey?.tracker_goal || "";
+    elements.surveyCapital.value = authState.survey?.capital || "";
+    elements.surveyCapitalCurrency.value = authState.survey?.capital_currency || "PLN";
+    elements.surveyAge.value = authState.survey?.age || 25;
+    elements.surveySkills.value = Array.isArray(authState.survey?.skills) ? authState.survey.skills.join(", ") : "analysis";
+    elements.surveyNonFinancialGoal.value = authState.survey?.non_financial_goal || "";
+}
+
+function collectSurveyPayload() {
+    return {
+        age: Number(elements.surveyAge.value || 25),
+        capital: Number(elements.surveyCapital.value || 0),
+        capital_currency: elements.surveyCapitalCurrency.value || "PLN",
+        skills: elements.surveySkills.value
+            ? elements.surveySkills.value.split(",").map((item) => item.trim()).filter(Boolean)
+            : ["analysis"],
+        financial_goal: elements.surveyFinancialGoal.value.trim() || "Understand my spending",
+        tracker_goal: elements.surveyTrackerGoal.value.trim() || "Get a quick financial review",
+        non_financial_goal: elements.surveyNonFinancialGoal.value.trim() || null
+    };
 }
 
 async function loadSurvey() {
     try {
-        const survey = await surveyApi.getMine();
-        authState.survey = survey;
-        return survey;
+        authState.survey = await surveyApi.getMine();
+        return authState.survey;
     } catch (error) {
         if (error.status === 404) {
             authState.survey = null;
@@ -438,61 +638,152 @@ async function loadSurvey() {
     }
 }
 
-async function loadDashboardData() {
-    const period = periodFilterInput.value || "month";
-    setStatus("Refreshing your finance review...");
-
-    const [transactionList, summary, insights] = await Promise.all([
-        transactionsApi.getMine(period),
-        transactionsApi.getSummary(period),
-        transactionsApi.getInsights(period)
-    ]);
-
-    transactions = transactionList.map(normalizeTransaction);
-    latestSummary = summary;
-
-    renderSummary(summary);
-    renderInsights(insights?.insights || []);
-    applyFilters();
-    drawCharts(summary, pieChartCanvas, lineChartCanvas, barChartCanvas, "all");
-
-    setStatus(`Loaded ${transactions.length} transaction(s) for the ${period} view.`);
-}
-
-async function refreshAppData() {
-    await loadDashboardData();
-}
-
 async function ensureSession() {
     if (!authState.token) {
         authState.user = null;
         authState.survey = null;
-        updateTopbarAuthState();
         return false;
     }
 
     try {
         authState.user = await authApi.getProfile();
         await loadSurvey();
-        updateSidebarUser();
-        updateTopbarAuthState();
+        elements.sidebarUserEmail.textContent = authState.user?.email || "AI money review";
         return true;
     } catch (error) {
         authApi.clearToken();
         authState.token = null;
         authState.user = null;
         authState.survey = null;
-        updateTopbarAuthState();
         return false;
     }
 }
 
-async function navigateTo(hash) {
-    if (window.location.hash === hash) {
-        await handleRouteChange();
+async function loadTrackerData() {
+    const period = appState.selectedPeriod;
+    const [transactions, summary, insights] = await Promise.all([
+        transactionsApi.getMine(period),
+        transactionsApi.getSummary(period),
+        transactionsApi.getInsights(period)
+    ]);
+
+    appState.savedTransactions = transactions.map((transaction) => normalizeTransaction(transaction, summary.base_currency || "PLN"));
+    appState.latestSummary = summary;
+    appState.latestInsights = insights?.insights || [];
+    appState.transientAnalysis = null;
+
+    renderSummary(summary);
+    renderInsights(appState.latestInsights);
+    renderTransactionsList();
+    drawCharts(summary, elements.pieChartCanvas, elements.lineChartCanvas, elements.barChartCanvas, "all");
+}
+
+function applyAnalysisResult(analysis) {
+    appState.transientAnalysis = analysis;
+    const summary = buildSummaryFromTransient(analysis);
+    const insights = getDisplayInsights();
+    renderSummary(summary);
+    renderInsights(insights);
+    renderTransactionsList();
+    drawCharts(summary, elements.pieChartCanvas, elements.lineChartCanvas, elements.barChartCanvas, "all");
+    setActiveView("app");
+}
+
+async function analyzeUploadedFile(file) {
+    const analysis = await transactionsApi.analyzeFile(file);
+    const normalizedTransactions = (analysis.transactions || []).map((transaction) => ({
+        ...transaction,
+        source: transaction.source || "ai_text"
+    }));
+
+    const normalizedAnalysis = {
+        ...analysis,
+        transactions: normalizedTransactions
+    };
+
+    appState.parsedTransactionDraft = normalizedAnalysis;
+    renderAiPreview(normalizedAnalysis);
+    applyAnalysisResult(normalizedAnalysis);
+    hideSheets();
+    showToast(`Parsed ${normalizedTransactions.length} transaction(s). Review and save if needed.`, "success");
+}
+
+async function saveParsedDraft() {
+    if (!appState.parsedTransactionDraft?.transactions?.length) {
+        showToast("There is nothing to save yet.", "error");
         return;
     }
-    window.location.hash = hash;
+
+    const draftTransactions = appState.parsedTransactionDraft.transactions;
+    for (const transaction of draftTransactions) {
+        await transactionsApi.create({
+            type: transaction.type,
+            amount: Number(transaction.amount),
+            currency: transaction.currency || "PLN",
+            category: transaction.category,
+            note: transaction.note,
+            transaction_date: transaction.transaction_date,
+            source: transaction.source || "ai_text"
+        });
+    }
+
+    discardAiPreview();
+    appState.parsedTransactionDraft = null;
+    await loadTrackerData();
+    showToast(`Saved ${draftTransactions.length} transaction(s).`, "success");
+}
+
+function buildAssistantContext() {
+    const summary = getDisplaySummary();
+    const insights = getDisplayInsights();
+    const transactions = getDisplayTransactions().slice(0, 10);
+
+    return {
+        screen: "mobile_analysis",
+        current_summary: summary,
+        current_insights: insights,
+        current_transactions: transactions,
+        tracker_goal: authState.survey?.tracker_goal || null,
+        financial_goal: authState.survey?.financial_goal || null
+    };
+}
+
+function renderChatMessage(role, message) {
+    const item = document.createElement("article");
+    item.className = `chat-message ${role}`;
+    item.innerHTML = `<p>${escapeHtml(message)}</p>`;
+    elements.chatMessages.appendChild(item);
+    elements.chatMessages.scrollTop = elements.chatMessages.scrollHeight;
+}
+
+function resetRouteTo(hash) {
+    if (window.location.hash !== hash) {
+        window.location.hash = hash;
+        return;
+    }
+    handleRouteChange();
+}
+
+function openVerifyView(token, credentials = null) {
+    setActiveView("auth");
+    showAuthMode("verify");
+    elements.verifyToken.value = token || "";
+    appState.pendingVerification = { token, credentials };
+}
+
+function openLoginView(prefill = {}) {
+    setActiveView("auth");
+    showAuthMode("login");
+    elements.loginEmail.value = prefill.email || "";
+    elements.loginPassword.value = prefill.password || "";
+}
+
+function openRegisterView(prefill = {}) {
+    setActiveView("auth");
+    showAuthMode("register");
+    elements.registerName.value = prefill.name || "";
+    elements.registerEmail.value = prefill.email || "";
+    elements.registerPassword.value = prefill.password || "";
 }
 
 async function loginAndBoot(email, password) {
@@ -500,25 +791,7 @@ async function loginAndBoot(email, password) {
     authState.token = token.access_token;
     await ensureSession();
     showToast("Logged in successfully.", "success");
-    await navigateTo(authState.survey ? "#/app/analyze" : "#/survey");
-}
-
-function collectSurveyPayload() {
-    const financialGoal = surveyFinancialGoalInput.value.trim();
-    const trackerGoal = surveyTrackerGoalInput.value.trim();
-    const capitalValue = surveyCapitalInput.value.trim();
-
-    return {
-        age: Number(surveyAgeInput.value || 18),
-        capital: capitalValue ? Number(capitalValue) : 0,
-        capital_currency: surveyCapitalCurrencyInput.value || "PLN",
-        skills: surveySkillsInput.value
-            ? surveySkillsInput.value.split(",").map((item) => item.trim()).filter(Boolean)
-            : ["budgeting"],
-        financial_goal: financialGoal || "Understand my spending patterns",
-        tracker_goal: trackerGoal || "Get faster financial insights",
-        non_financial_goal: surveyNonFinancialGoalInput.value.trim() || null
-    };
+    resetRouteTo(authState.survey ? "#/app" : "#/survey");
 }
 
 async function handleRouteChange() {
@@ -528,118 +801,173 @@ async function handleRouteChange() {
     if (!isAuthenticated) {
         if (hash === "#/register") {
             openRegisterView();
-            return;
-        }
-        if (hash === "#/login") {
+        } else if (hash === "#/login") {
             openLoginView();
-            return;
+        } else {
+            setActiveView("landing");
         }
-        if (hash.startsWith("#/app") || hash === "#/survey") {
-            openLoginView();
-            return;
-        }
-
-        setActiveView("landing");
         return;
     }
 
     if (hash === "#/survey") {
+        fillSurveyForm();
         setActiveView("survey");
-        fillSurveyForm(authState.survey);
-        return;
-    }
-
-    if (hash === "#/" || hash === "#/login" || hash === "#/register") {
-        await navigateTo("#/app/analyze");
         return;
     }
 
     setActiveView("app");
-
-    if (hash === "#/app/details") {
-        setActivePage("details");
-        await refreshAppData();
-        return;
-    }
-
-    if (hash === "#/app/ai") {
-        setActivePage("ai");
-        return;
-    }
-
-    setActivePage("analyze");
-    await refreshAppData();
+    await loadTrackerData();
 }
 
-topbarLoginBtn.addEventListener("click", () => {
-    if (authState.token && authState.user) {
-        window.location.hash = "#/app/analyze";
+function bindFilters() {
+    [elements.filterType, elements.filterCategory, elements.filterFrom, elements.filterTo, elements.searchInput].forEach((input) => {
+        input.addEventListener("input", renderTransactionsList);
+        input.addEventListener("change", renderTransactionsList);
+    });
+}
+
+function bindPeriodTabs() {
+    document.querySelectorAll(".period-tab").forEach((button) => {
+        button.addEventListener("click", async () => {
+            const period = button.dataset.period;
+            if (!PERIOD_OPTIONS.includes(period)) {
+                return;
+            }
+
+            appState.selectedPeriod = period;
+            elements.periodFilter.value = period;
+            document.querySelectorAll(".period-tab").forEach((item) => {
+                item.classList.toggle("active", item === button);
+            });
+            await loadTrackerData();
+        });
+    });
+}
+
+function bindEntryKeypad() {
+    elements.entryKeypad.addEventListener("click", async (event) => {
+        const button = event.target.closest("button[data-key]");
+        if (!button) {
+            return;
+        }
+
+        const key = button.dataset.key;
+        if (key === "⌫") {
+            appState.entryAmount = appState.entryAmount.length > 1
+                ? appState.entryAmount.slice(0, -1)
+                : "0";
+        } else if (key === "C") {
+            appState.entryAmount = "0";
+        } else if (key === "save") {
+            const amount = Number(appState.entryAmount);
+            if (!amount) {
+                showToast("Enter an amount first.", "error");
+                return;
+            }
+
+            await transactionsApi.create({
+                type: appState.entryType,
+                amount,
+                currency: getTrackerCurrency(),
+                category: appState.entryCategory,
+                note: elements.entryNote.value.trim() || `${appState.entryType} via quick add`,
+                transaction_date: new Date(`${elements.entryDate.value}T12:00:00`).toISOString(),
+                source: "manual"
+            });
+
+            hideSheets();
+            await loadTrackerData();
+            showToast("Transaction added.", "success");
+            return;
+        } else if (key === "." && appState.entryAmount.includes(".")) {
+            return;
+        } else {
+            if (appState.entryAmount === "0" && key !== "." && key !== "00") {
+                appState.entryAmount = key;
+            } else {
+                appState.entryAmount += key;
+            }
+        }
+
+        updateEntryDisplay();
+    });
+}
+
+function bindTransactionActions() {
+    elements.transactionsBody.addEventListener("click", async (event) => {
+        const button = event.target.closest("button[data-action]");
+        if (!button || appState.transientAnalysis) {
+            return;
+        }
+
+        const transaction = appState.savedTransactions.find((item) => String(item.id) === button.dataset.id);
+        if (!transaction) {
+            return;
+        }
+
+        if (button.dataset.action === "edit") {
+            openManualSheet(transaction);
+            return;
+        }
+
+        if (button.dataset.action === "delete") {
+            await transactionsApi.remove(transaction.id);
+            await loadTrackerData();
+            showToast("Transaction removed.", "success");
+        }
+    });
+}
+
+buttons.heroStart.addEventListener("click", () => {
+    if (authState.user) {
+        resetRouteTo("#/app");
         return;
     }
-    window.location.hash = "#/login";
+    resetRouteTo("#/register");
 });
 
-topbarRegisterBtn.addEventListener("click", () => {
-    if (authState.token && authState.user) {
-        window.location.hash = "#/app/analyze";
-        return;
-    }
-    window.location.hash = "#/register";
+buttons.heroLogin.addEventListener("click", () => resetRouteTo("#/login"));
+buttons.switchToRegister.addEventListener("click", () => openRegisterView({ email: elements.loginEmail.value.trim() }));
+buttons.switchToLogin.addEventListener("click", () => openLoginView({ email: elements.registerEmail.value.trim() }));
+buttons.backToLogin.addEventListener("click", () => openLoginView(appState.pendingVerification?.credentials || {}));
+
+buttons.openLeftDrawer.addEventListener("click", () => openDrawer(elements.leftDrawer));
+buttons.closeLeftDrawer.addEventListener("click", closeDrawers);
+buttons.openRightDrawer.addEventListener("click", () => openDrawer(elements.rightDrawer));
+buttons.closeRightDrawer.addEventListener("click", closeDrawers);
+elements.drawerBackdrop.addEventListener("click", closeAllOverlays);
+
+buttons.openUpload.addEventListener("click", () => elements.statementFileInput.click());
+buttons.triggerUpload.addEventListener("click", () => {
+    closeDrawers();
+    elements.statementFileInput.click();
 });
 
-heroStartBtn.addEventListener("click", () => {
-    if (authState.token && authState.user) {
-        window.location.hash = "#/app/analyze";
-        return;
-    }
-    window.location.hash = "#/register";
+buttons.openTextAnalysis.addEventListener("click", () => showSheet(elements.textAnalysisSheet));
+buttons.closeTextAnalysis.addEventListener("click", hideSheets);
+buttons.openTransactions.addEventListener("click", () => showSheet(elements.transactionsSheet));
+buttons.closeTransactions.addEventListener("click", hideSheets);
+buttons.openManualMode.addEventListener("click", () => openManualSheet());
+buttons.closeManual.addEventListener("click", hideSheets);
+buttons.openExpenseEntry.addEventListener("click", () => openEntrySheet("expense"));
+buttons.openIncomeEntry.addEventListener("click", () => openEntrySheet("income"));
+buttons.closeEntry.addEventListener("click", hideSheets);
+buttons.openSurvey.addEventListener("click", () => {
+    fillSurveyForm();
+    closeDrawers();
+    setActiveView("survey");
 });
-
-heroLoginBtn.addEventListener("click", () => {
-    window.location.hash = "#/login";
+buttons.chatFab.addEventListener("click", openChatWidget);
+buttons.closeChat.addEventListener("click", closeChatWidget);
+buttons.openDetails.addEventListener("click", () => showSheet(elements.transactionsSheet));
+buttons.discardAi.addEventListener("click", async () => {
+    discardAiPreview();
+    await loadTrackerData();
+    showToast("Returned to your saved tracker data.", "info");
 });
+buttons.confirmAi.addEventListener("click", saveParsedDraft);
 
-switchToRegisterBtn.addEventListener("click", () => {
-    window.location.hash = "#/register";
-});
-
-switchToLoginBtn.addEventListener("click", () => {
-    window.location.hash = "#/login";
-});
-
-backToLoginBtn.addEventListener("click", () => {
-    openLoginView(pendingVerification?.credentials || {});
-});
-
-document.querySelectorAll(".nav-btn").forEach((button) => {
-    button.addEventListener("click", () => {
-        window.location.hash = button.dataset.route;
-    });
-});
-
-promptButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-        chatInput.value = button.dataset.prompt || "";
-        chatInput.focus();
-    });
-});
-
-promptFillButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-        aiTextInput.value = button.dataset.fill || "";
-        aiTextInput.focus();
-    });
-});
-
-askFollowUpBtn.addEventListener("click", () => {
-    window.location.hash = "#/app/ai";
-});
-
-seeDetailsBtn.addEventListener("click", () => {
-    window.location.hash = "#/app/details";
-});
-
-logoutBtn.addEventListener("click", async () => {
+buttons.logoutDrawer.addEventListener("click", async () => {
     try {
         await authApi.logout();
     } catch (error) {
@@ -650,61 +978,65 @@ logoutBtn.addEventListener("click", async () => {
     authState.token = null;
     authState.user = null;
     authState.survey = null;
-    transactions = [];
-    updateTopbarAuthState();
+    appState.transientAnalysis = null;
+    appState.savedTransactions = [];
+    closeAllOverlays();
     showToast("Logged out.", "info");
-    window.location.hash = "#/login";
+    resetRouteTo("#/");
 });
 
-loginForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
+elements.statementFileInput.addEventListener("change", async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+        return;
+    }
 
     try {
-        await loginAndBoot(loginEmailInput.value.trim(), loginPasswordInput.value);
+        await analyzeUploadedFile(file);
     } catch (error) {
-        if (error.status === 403) {
-            showToast("Your account is not verified yet. Complete verification first.", "error");
-            return;
-        }
+        showToast(error.message || "Could not analyze this file.", "error");
+    } finally {
+        elements.statementFileInput.value = "";
+    }
+});
+
+forms.login.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try {
+        await loginAndBoot(elements.loginEmail.value.trim(), elements.loginPassword.value);
+    } catch (error) {
         showToast(error.message || "Login failed.", "error");
     }
 });
 
-registerForm.addEventListener("submit", async (event) => {
+forms.register.addEventListener("submit", async (event) => {
     event.preventDefault();
-
-    const payload = {
-        name: registerNameInput.value.trim() || null,
-        email: registerEmailInput.value.trim(),
-        password: registerPasswordInput.value
-    };
-
     try {
+        const payload = {
+            name: elements.registerName.value.trim() || null,
+            email: elements.registerEmail.value.trim(),
+            password: elements.registerPassword.value
+        };
+
         const registeredUser = await authApi.register(payload);
         if (registeredUser.verification_token) {
             openVerifyView(registeredUser.verification_token, {
                 email: payload.email,
                 password: payload.password
             });
-            showToast("Account created. Verify it to continue.", "success");
+            showToast("Account created. Verify the account to continue.", "success");
             return;
         }
 
         openLoginView({ email: payload.email });
         showToast("Account created. Please log in.", "success");
     } catch (error) {
-        if (isEmailAlreadyRegisteredError(error)) {
-            openLoginView({ email: payload.email });
-            showToast("This email is already registered. Please log in instead.", "error");
-            return;
-        }
-
         showToast(error.message || "Registration failed.", "error");
     }
 });
 
-verifyAccountBtn.addEventListener("click", async () => {
-    const token = verifyTokenInput.value.trim();
+buttons.verifyAccount.addEventListener("click", async () => {
+    const token = elements.verifyToken.value.trim();
     if (!token) {
         showToast("Verification token is missing.", "error");
         return;
@@ -713,22 +1045,20 @@ verifyAccountBtn.addEventListener("click", async () => {
     try {
         await authApi.verifyEmail(token);
         showToast("Account verified.", "success");
-
-        if (pendingVerification?.credentials?.email && pendingVerification?.credentials?.password) {
-            const credentials = pendingVerification.credentials;
-            pendingVerification = null;
+        if (appState.pendingVerification?.credentials) {
+            const credentials = appState.pendingVerification.credentials;
+            appState.pendingVerification = null;
             await loginAndBoot(credentials.email, credentials.password);
             return;
         }
 
-        pendingVerification = null;
         openLoginView();
     } catch (error) {
-        showToast(error.message || "Could not verify account.", "error");
+        showToast(error.message || "Could not verify the account.", "error");
     }
 });
 
-surveyForm.addEventListener("submit", async (event) => {
+forms.survey.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     try {
@@ -736,165 +1066,119 @@ surveyForm.addEventListener("submit", async (event) => {
         authState.survey = authState.survey
             ? await surveyApi.updateMine(payload)
             : await surveyApi.create(payload);
-
         showToast("Preferences saved.", "success");
-        window.location.hash = "#/app/analyze";
+        resetRouteTo("#/app");
     } catch (error) {
-        showToast(error.message || "Could not save preferences.", "error");
+        showToast(error.message || "Could not save personalization.", "error");
     }
 });
 
-skipSurveyBtn.addEventListener("click", () => {
-    window.location.hash = "#/app/analyze";
-});
+buttons.skipSurvey.addEventListener("click", () => resetRouteTo("#/app"));
 
-transactionForm.addEventListener("submit", async (event) => {
+forms.aiParse.addEventListener("submit", async (event) => {
     event.preventDefault();
-
-    try {
-        const payload = toTransactionPayload("manual");
-        if (editingTransactionId) {
-            await transactionsApi.update(editingTransactionId, payload);
-            showToast("Transaction updated.", "success");
-        } else {
-            await transactionsApi.create(payload);
-            showToast("Transaction created.", "success");
-        }
-
-        resetManualForm();
-        await refreshAppData();
-    } catch (error) {
-        showToast(error.message || "Could not save transaction.", "error");
-    }
-});
-
-cancelEditBtn.addEventListener("click", resetManualForm);
-
-transactionsBody.addEventListener("click", async (event) => {
-    const transactionId = Number(event.target.dataset.id);
-    if (!transactionId) {
-        return;
-    }
-
-    if (event.target.classList.contains("delete-btn")) {
-        if (!window.confirm("Delete this transaction?")) {
-            return;
-        }
-
-        try {
-            await transactionsApi.remove(transactionId);
-            showToast("Transaction deleted.", "success");
-            await refreshAppData();
-        } catch (error) {
-            showToast(error.message || "Could not delete transaction.", "error");
-        }
-    }
-
-    if (event.target.classList.contains("edit-btn")) {
-        const transaction = transactions.find((item) => item.id === transactionId);
-        if (!transaction) {
-            return;
-        }
-
-        editingTransactionId = transaction.id;
-        manualFormTitleEl.textContent = "Edit transaction";
-        submitBtn.textContent = "Save changes";
-        cancelEditBtn.classList.remove("hidden");
-        nameInput.value = transaction.name;
-        amountInput.value = transaction.amount;
-        typeInput.value = transaction.type;
-        categoryInput.value = transaction.category;
-        dateInput.value = transaction.date;
-        window.location.hash = "#/app/details";
-        window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-});
-
-[searchInput, filterTypeInput, filterCategoryInput, fromDateInput, toDateInput].forEach((input) => {
-    input.addEventListener(input.tagName === "SELECT" ? "change" : "input", applyFilters);
-});
-
-periodFilterInput.addEventListener("change", async () => {
-    try {
-        await refreshAppData();
-    } catch (error) {
-        showToast(error.message || "Could not update the selected period.", "error");
-    }
-});
-
-aiParseForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const text = aiTextInput.value.trim();
+    const text = elements.aiText.value.trim();
     if (!text) {
         showToast("Add some spending text first.", "error");
         return;
     }
 
     try {
-        parsedTransactionDraft = await transactionsApi.parseText({ text });
-        renderAiPreview(parsedTransactionDraft);
-        showToast("Analysis preview is ready.", "success");
+        const blob = new File([text], "statement.txt", { type: "text/plain" });
+        await analyzeUploadedFile(blob);
     } catch (error) {
-        showToast(error.message || "Could not parse the text.", "error");
+        showToast(error.message || "Could not analyze this text.", "error");
     }
 });
 
-confirmAiBtn.addEventListener("click", async () => {
-    if (!parsedTransactionDraft) {
-        return;
-    }
+forms.transaction.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const payload = {
+        note: elements.nameInput.value.trim(),
+        amount: Number(elements.amountInput.value),
+        type: elements.typeInput.value,
+        category: elements.categoryInput.value,
+        transaction_date: new Date(`${elements.dateInput.value}T12:00:00`).toISOString(),
+        currency: getTrackerCurrency(),
+        source: "manual"
+    };
 
     try {
-        await transactionsApi.create({
-            ...parsedTransactionDraft,
-            transaction_date: new Date(parsedTransactionDraft.transaction_date).toISOString()
-        });
-        discardAiPreview();
-        aiTextInput.value = "";
-        showToast("Transaction saved.", "success");
-        await refreshAppData();
+        if (appState.editingTransactionId) {
+            await transactionsApi.update(appState.editingTransactionId, payload);
+            showToast("Transaction updated.", "success");
+        } else {
+            await transactionsApi.create(payload);
+            showToast("Transaction added.", "success");
+        }
+
+        hideSheets();
+        appState.editingTransactionId = null;
+        forms.transaction.reset();
+        elements.dateInput.value = toInputDate();
+        await loadTrackerData();
     } catch (error) {
-        showToast(error.message || "Could not save parsed transaction.", "error");
+        showToast(error.message || "Could not save transaction.", "error");
     }
 });
 
-discardAiBtn.addEventListener("click", discardAiPreview);
+elements.cancelEditBtn.addEventListener("click", () => openManualSheet());
 
-chatForm.addEventListener("submit", async (event) => {
+forms.chat.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const message = chatInput.value.trim();
+    const message = elements.chatInput.value.trim();
     if (!message) {
         return;
     }
 
     renderChatMessage("user", message);
-    chatInput.value = "";
+    elements.chatInput.value = "";
 
     try {
-        const response = await assistantApi.sendMessage({ message });
+        const response = await assistantApi.sendMessage({
+            message,
+            context: buildAssistantContext()
+        });
         renderChatMessage("assistant", response.reply);
     } catch (error) {
-        renderChatMessage("assistant", error.message || "Assistant is unavailable right now.");
+        showToast(error.message || "Assistant is unavailable right now.", "error");
     }
 });
 
-setSelectOptions(typeInput, TYPE_OPTIONS);
-setSelectOptions(categoryInput, CATEGORY_OPTIONS);
-setSelectOptions(filterTypeInput, TYPE_OPTIONS, true, "All types");
-setSelectOptions(filterCategoryInput, CATEGORY_OPTIONS, true, "All categories");
-dateInput.value = toInputDate();
-renderInsights([]);
-renderChatMessage("assistant", "Run an analysis first, then ask me what changed, what hurts your budget most, or what to do next.");
-updateTopbarAuthState();
-
-window.addEventListener("hashchange", () => {
-    handleRouteChange().catch((error) => {
-        console.error(error);
-        showToast(error.message || "Navigation failed.", "error");
+document.querySelectorAll(".prompt-chip[data-prompt]").forEach((button) => {
+    button.addEventListener("click", () => {
+        elements.chatInput.value = button.dataset.prompt || "";
+        elements.chatInput.focus();
+        openChatWidget();
     });
 });
 
-handleRouteChange().catch((error) => {
-    console.error(error);
-    showToast(error.message || "Could not initialize the app.", "error");
+document.querySelectorAll(".prompt-fill-chip").forEach((button) => {
+    button.addEventListener("click", () => {
+        elements.aiText.value = button.dataset.fill || "";
+        elements.aiText.focus();
+    });
 });
+
+function initializeStaticUi() {
+    setSelectOptions(elements.typeInput, TYPE_OPTIONS);
+    setSelectOptions(elements.categoryInput, CATEGORY_OPTIONS);
+    setSelectOptions(elements.filterType, TYPE_OPTIONS, true);
+    setSelectOptions(elements.filterCategory, CATEGORY_OPTIONS, true);
+    elements.dateInput.value = toInputDate();
+    elements.entryDate.value = toInputDate();
+    elements.periodFilter.value = appState.selectedPeriod;
+    bindFilters();
+    bindPeriodTabs();
+    bindEntryKeypad();
+    bindTransactionActions();
+    updateEntryDisplay();
+    renderTransactionsList();
+    renderInsights([]);
+}
+
+window.addEventListener("hashchange", handleRouteChange);
+
+initializeStaticUi();
+handleRouteChange();

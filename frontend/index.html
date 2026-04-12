@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Xoraq Finance</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,470 +10,403 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="page-shell">
-        <header class="topbar">
-            <a class="brand" href="#/">Xoraq Finance</a>
-            <nav class="topbar-actions">
-                <button id="go-login-btn" class="ghost-btn">Login</button>
-                <button id="go-register-btn" class="primary-btn">Try it</button>
-                <button id="logout-btn" class="ghost-btn hidden">Logout</button>
-            </nav>
-        </header>
+    <main class="mobile-app">
+        <section id="view-landing" class="view active">
+            <div class="auth-screen">
+                <div class="auth-hero">
+                    <p class="eyebrow">AI finance review</p>
+                    <h1>One mobile space to understand your money fast.</h1>
+                    <p>Paste transactions, upload a statement, or describe spending in plain language. Xoraq turns it into quick financial clarity.</p>
+                </div>
+                <div class="auth-actions">
+                    <button id="hero-start-btn" class="primary-btn full-width">Start</button>
+                    <button id="hero-login-btn" class="ghost-btn full-width">I already have an account</button>
+                </div>
+            </div>
+        </section>
 
-        <main>
-            <section id="view-landing" class="view active">
-                <div class="hero-layout">
-                    <div class="hero-copy">
-                        <p class="eyebrow">AI finance review</p>
-                        <h1>Understand your spending in 30 seconds.</h1>
-                        <p class="hero-text">
-                            Paste transactions, upload a statement, or describe your recent spending. Xoraq turns it into clear financial insights without forcing you into a full tracker.
-                        </p>
-                        <div class="hero-actions">
-                            <button id="hero-start-btn" class="primary-btn">Analyze now</button>
-                            <button id="hero-login-btn" class="ghost-btn">I already have an account</button>
+        <section id="view-auth" class="view">
+            <div class="auth-screen">
+                <div class="auth-hero compact">
+                    <p class="eyebrow">Account</p>
+                    <h2 id="auth-title">Login</h2>
+                    <p id="auth-subtitle">Open your workspace.</p>
+                </div>
+
+                <form id="login-form" class="stack-form auth-card">
+                    <label>
+                        Email
+                        <input type="email" id="login-email" required placeholder="you@example.com">
+                    </label>
+                    <label>
+                        Password
+                        <input type="password" id="login-password" required placeholder="Password">
+                    </label>
+                    <button type="submit" class="primary-btn full-width">Login</button>
+                    <button type="button" id="switch-to-register" class="ghost-btn full-width">Create account</button>
+                </form>
+
+                <form id="register-form" class="stack-form auth-card hidden">
+                    <label>
+                        Name
+                        <input type="text" id="register-name" placeholder="Your name">
+                    </label>
+                    <label>
+                        Email
+                        <input type="email" id="register-email" required placeholder="you@example.com">
+                    </label>
+                    <label>
+                        Password
+                        <input type="password" id="register-password" required placeholder="Create a password">
+                        <small class="helper-text">At least 8 chars, uppercase, lowercase, number, special symbol.</small>
+                    </label>
+                    <button type="submit" class="primary-btn full-width">Create account</button>
+                    <button type="button" id="switch-to-login" class="ghost-btn full-width">Back to login</button>
+                </form>
+
+                <div id="verify-panel" class="stack-form auth-card hidden">
+                    <label>
+                        Verification token
+                        <input type="text" id="verify-token" readonly>
+                    </label>
+                    <button type="button" id="verify-account-btn" class="primary-btn full-width">Verify account</button>
+                    <button type="button" id="back-to-login-btn" class="ghost-btn full-width">Back to login</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-survey" class="view">
+            <div class="auth-screen">
+                <div class="auth-hero compact">
+                    <p class="eyebrow">Optional setup</p>
+                    <h2>Sharper insights</h2>
+                    <p>Add only what helps the AI understand your money better.</p>
+                </div>
+                <form id="survey-form" class="stack-form auth-card">
+                    <label>
+                        Main financial goal
+                        <input type="text" id="survey-financial-goal" placeholder="Save more consistently">
+                    </label>
+                    <label>
+                        Why are you using this tool?
+                        <input type="text" id="survey-tracker-goal" placeholder="Quick monthly reviews">
+                    </label>
+                    <label>
+                        Starting balance
+                        <input type="number" id="survey-capital" min="0" step="0.01" placeholder="Optional">
+                    </label>
+                    <label>
+                        Currency
+                        <select id="survey-capital-currency">
+                            <option value="PLN">PLN</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="UAH">UAH</option>
+                            <option value="GBP">GBP</option>
+                        </select>
+                    </label>
+                    <label class="hidden"><input type="number" id="survey-age"></label>
+                    <label class="hidden"><input type="text" id="survey-skills"></label>
+                    <label class="hidden"><input type="text" id="survey-non-financial-goal"></label>
+                    <div class="auth-actions">
+                        <button type="submit" class="primary-btn full-width">Save preferences</button>
+                        <button type="button" id="skip-survey-btn" class="ghost-btn full-width">Skip</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section id="view-app" class="view">
+            <div class="phone-shell">
+                <div class="phone-header">
+                    <button id="open-left-drawer-btn" class="icon-btn" type="button">☰</button>
+                    <div class="phone-brand">
+                        <strong>Xoraq</strong>
+                        <span id="sidebar-user-email">AI money review</span>
+                    </div>
+                    <div class="phone-header-actions">
+                        <button id="open-upload-btn" class="icon-btn" type="button">⤴</button>
+                        <button id="open-right-drawer-btn" class="icon-btn" type="button">⋮</button>
+                    </div>
+                    <input id="statement-file-input" type="file" class="hidden" accept=".csv,.txt,.json,.xlsx">
+                </div>
+
+                <div class="period-tabs">
+                    <button class="period-tab active" data-period="month" type="button">Month</button>
+                    <button class="period-tab" data-period="week" type="button">Week</button>
+                    <button class="period-tab" data-period="year" type="button">Year</button>
+                    <button class="period-tab" data-period="day" type="button">Day</button>
+                </div>
+                <select id="period-filter" class="hidden">
+                    <option value="day">Day</option>
+                    <option value="week">Week</option>
+                    <option value="month" selected>Month</option>
+                    <option value="year">Year</option>
+                </select>
+
+                <div class="overview-card">
+                    <div class="overview-topline">
+                        <div>
+                            <p class="eyebrow">Current review</p>
+                            <h1 id="primary-insight-title">No analysis yet</h1>
                         </div>
-                        <div class="hero-trust">
-                            <span>No long setup</span>
-                            <span>Optional personalization</span>
-                            <span>Manual tracking stays hidden until needed</span>
-                        </div>
+                        <span class="status-badge" id="last-updated">Now</span>
                     </div>
 
-                    <div class="hero-preview">
-                        <article class="preview-surface preview-focus">
-                            <div class="preview-head">
-                                <div>
-                                    <p class="eyebrow">Example result</p>
-                                    <h3>You spent most on food and housing this month.</h3>
+                    <p id="primary-insight-message" class="overview-message">Describe your spending, upload a file, or add a transaction to start.</p>
+
+                    <div class="donut-showcase">
+                        <div class="donut-stage">
+                            <canvas id="pie-chart"></canvas>
+                            <div class="donut-center">
+                                <div class="center-line">
+                                    <span id="income">0.00 PLN</span>
+                                    <small>Income</small>
                                 </div>
-                                <span class="status-pill">AI ready</span>
-                            </div>
-                            <div class="preview-metrics">
-                                <div>
-                                    <span>Total spent</span>
-                                    <strong>4,820 PLN</strong>
+                                <div class="center-line expense">
+                                    <span id="expenses">0.00 PLN</span>
+                                    <small>Expenses</small>
                                 </div>
-                                <div>
-                                    <span>Net result</span>
-                                    <strong>+1,430 PLN</strong>
-                                </div>
-                                <div>
-                                    <span>Top category</span>
-                                    <strong>Food</strong>
+                                <div class="center-line total">
+                                    <span id="balance">0.00 PLN</span>
+                                    <small>Balance</small>
                                 </div>
                             </div>
-                            <ul class="preview-list">
-                                <li>Food delivery is 31% of your expenses.</li>
-                                <li>Transport dropped compared with last month.</li>
-                                <li>You still saved money overall.</li>
-                            </ul>
-                        </article>
+                        </div>
+                        <div id="radial-legend" class="radial-legend"></div>
+                    </div>
+
+                    <div class="balance-strip">
+                        <div>
+                            <span>Balance</span>
+                            <strong id="dashboard-status">Ready to review</strong>
+                        </div>
+                        <div class="balance-rate">
+                            <span>Savings</span>
+                            <strong id="savings-rate">0.0%</strong>
+                        </div>
                     </div>
                 </div>
-            </section>
 
-            <section id="view-auth" class="view">
-                <div class="panel auth-panel">
-                    <div class="panel-header">
-                        <p class="eyebrow">Account</p>
-                        <h2 id="auth-title">Login</h2>
-                        <p id="auth-subtitle">Open your finance review workspace.</p>
+                <div class="quick-analysis-card">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">Highlights</p>
+                            <h2>What matters right now</h2>
+                        </div>
+                        <button id="open-details-btn" class="mini-link-btn" type="button">Details</button>
                     </div>
+                    <div id="insights-list" class="insights-stack"></div>
+                </div>
 
-                    <form id="login-form" class="stack-form">
+                <div class="trend-card">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">Trend</p>
+                            <h2>Balance movement</h2>
+                        </div>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="line-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="compare-card">
+                    <div class="section-heading">
+                        <div>
+                            <p class="eyebrow">Comparison</p>
+                            <h2>Income vs expenses</h2>
+                        </div>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="bar-chart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bottom-actions">
+                    <button id="open-expense-entry-btn" class="circle-action expense" type="button">−</button>
+                    <div class="bottom-balance-pill">
+                        <span>Tracker currency</span>
+                        <strong id="tracker-currency-label">PLN</strong>
+                    </div>
+                    <button id="open-income-entry-btn" class="circle-action income" type="button">+</button>
+                </div>
+
+                <button id="chat-fab-btn" class="chat-fab" type="button">✦</button>
+
+                <aside id="left-drawer" class="drawer">
+                    <div class="drawer-head">
+                        <h3>Analyze</h3>
+                        <button id="close-left-drawer-btn" class="icon-btn" type="button">✕</button>
+                    </div>
+                    <div class="drawer-content">
+                        <button id="open-text-analysis-btn" class="drawer-action" type="button">Describe spending</button>
+                        <button id="trigger-upload-btn" class="drawer-action" type="button">Upload statement or file</button>
+                        <button id="open-survey-btn" class="drawer-action" type="button">Personalization</button>
+                    </div>
+                </aside>
+
+                <aside id="right-drawer" class="drawer right">
+                    <div class="drawer-head">
+                        <h3>More</h3>
+                        <button id="close-right-drawer-btn" class="icon-btn" type="button">✕</button>
+                    </div>
+                    <div class="drawer-content">
+                        <button id="open-transactions-btn" class="drawer-action" type="button">Transactions</button>
+                        <button id="open-manual-mode-btn" class="drawer-action" type="button">Manual input mode</button>
+                        <button id="logout-drawer-btn" class="drawer-action danger" type="button">Logout</button>
+                    </div>
+                </aside>
+
+                <div id="drawer-backdrop" class="drawer-backdrop hidden"></div>
+
+                <div id="text-analysis-sheet" class="sheet hidden">
+                    <div class="sheet-header">
+                        <button id="close-text-analysis-btn" class="icon-btn" type="button">✕</button>
+                        <h3>Describe spending</h3>
+                        <span></span>
+                    </div>
+                    <div class="sheet-body">
                         <label>
-                            Email
-                            <input type="email" id="login-email" required placeholder="you@example.com">
+                            Text
+                            <textarea id="ai-text" rows="6" placeholder="Yesterday groceries 120 PLN, today freelance 400 USD"></textarea>
                         </label>
-                        <label>
-                            Password
-                            <input type="password" id="login-password" required placeholder="Your password">
-                        </label>
-                        <button type="submit" class="primary-btn full-width">Login</button>
-                        <button type="button" id="switch-to-register" class="ghost-btn full-width">Create an account</button>
+                        <div class="quick-prompt-grid">
+                            <button class="prompt-fill-chip" type="button" data-fill="Yesterday groceries 120 PLN and taxi 43 PLN">Yesterday groceries 120 PLN and taxi 43 PLN</button>
+                            <button class="prompt-fill-chip" type="button" data-fill="Last week I got salary 5500 PLN and spent 390 on food">Salary and food</button>
+                            <button class="prompt-fill-chip" type="button" data-fill="Вчора заробив на фрілансі 400 доларів, сьогодні кава 15 злотих">Mixed language</button>
+                        </div>
+                        <form id="ai-parse-form" class="stack-form">
+                            <button type="submit" class="primary-btn full-width">Analyze text</button>
+                        </form>
+                        <div id="ai-preview" class="sheet-preview hidden">
+                            <div id="ai-preview-content" class="preview-grid"></div>
+                            <div class="auth-actions">
+                                <button id="confirm-ai-btn" type="button" class="primary-btn full-width">Save transaction</button>
+                                <button id="discard-ai-btn" type="button" class="ghost-btn full-width">Discard</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="entry-sheet" class="sheet hidden">
+                    <div class="sheet-header">
+                        <button id="close-entry-sheet-btn" class="icon-btn" type="button">✕</button>
+                        <h3 id="entry-sheet-title">New transaction</h3>
+                        <span></span>
+                    </div>
+                    <div class="sheet-body">
+                        <div class="amount-display">
+                            <span id="entry-currency">PLN</span>
+                            <strong id="entry-amount-display">0</strong>
+                        </div>
+                        <div class="entry-meta">
+                            <label>
+                                Date
+                                <input id="entry-date" type="date">
+                            </label>
+                            <label>
+                                Note
+                                <input id="entry-note" type="text" placeholder="Optional note">
+                            </label>
+                        </div>
+                        <div id="entry-category-grid" class="category-grid"></div>
+                        <div class="keypad" id="entry-keypad">
+                            <button type="button" data-key="1">1</button>
+                            <button type="button" data-key="2">2</button>
+                            <button type="button" data-key="3">3</button>
+                            <button type="button" data-key="⌫">⌫</button>
+                            <button type="button" data-key="4">4</button>
+                            <button type="button" data-key="5">5</button>
+                            <button type="button" data-key="6">6</button>
+                            <button type="button" data-key="C">C</button>
+                            <button type="button" data-key="7">7</button>
+                            <button type="button" data-key="8">8</button>
+                            <button type="button" data-key="9">9</button>
+                            <button type="button" data-key=".">.</button>
+                            <button type="button" data-key="00">00</button>
+                            <button type="button" data-key="0">0</button>
+                            <button type="button" data-key="save" class="primary-key">Save</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="transactions-sheet" class="sheet hidden">
+                    <div class="sheet-header">
+                        <button id="close-transactions-sheet-btn" class="icon-btn" type="button">✕</button>
+                        <h3>Transactions</h3>
+                        <span></span>
+                    </div>
+                    <div class="sheet-body">
+                        <div class="filters-grid mobile-filters">
+                            <select id="filter-type"></select>
+                            <select id="filter-category"></select>
+                            <input type="date" id="from-date">
+                            <input type="date" id="to-date">
+                            <input type="text" id="search" placeholder="Search notes">
+                        </div>
+                        <div id="transactions-body" class="transactions-list"></div>
+                    </div>
+                </div>
+
+                <div id="manual-sheet" class="sheet hidden">
+                    <div class="sheet-header">
+                        <button id="close-manual-sheet-btn" class="icon-btn" type="button">✕</button>
+                        <h3 id="manual-form-title">Manual input</h3>
+                        <span></span>
+                    </div>
+                    <div class="sheet-body">
+                        <form id="transaction-form" class="stack-form">
+                            <label>
+                                Note
+                                <input type="text" id="name" placeholder="Grocery shopping">
+                            </label>
+                            <label>
+                                Amount
+                                <input type="number" id="amount" step="0.01" min="0.01">
+                            </label>
+                            <label>
+                                Type
+                                <select id="type"></select>
+                            </label>
+                            <label>
+                                Category
+                                <select id="category"></select>
+                            </label>
+                            <label>
+                                Date
+                                <input type="date" id="date">
+                            </label>
+                            <div class="auth-actions">
+                                <button type="submit" id="submit-btn" class="primary-btn full-width">Add transaction</button>
+                                <button type="button" id="cancel-edit-btn" class="ghost-btn full-width hidden">Cancel edit</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="chat-widget" class="chat-widget hidden">
+                    <div class="chat-widget-head">
+                        <div>
+                            <p class="eyebrow">AI follow-up</p>
+                            <h3>Ask about this review</h3>
+                        </div>
+                        <button id="close-chat-widget-btn" class="icon-btn" type="button">✕</button>
+                    </div>
+                    <div id="chat-messages" class="chat-messages"></div>
+                    <div class="chat-suggestions">
+                        <button class="prompt-chip" type="button" data-prompt="What hurts my budget the most right now?">Budget issue</button>
+                        <button class="prompt-chip" type="button" data-prompt="What changed compared with the previous period?">What changed?</button>
+                        <button class="prompt-chip" type="button" data-prompt="What should I do next to improve my finances?">Next step</button>
+                    </div>
+                    <form id="chat-form" class="chat-form">
+                        <textarea id="chat-input" rows="3" placeholder="Ask a follow-up question"></textarea>
+                        <button type="submit" class="primary-btn full-width">Send</button>
                     </form>
-
-                    <form id="register-form" class="stack-form hidden">
-                        <label>
-                            Name
-                            <input type="text" id="register-name" placeholder="Your name">
-                        </label>
-                        <label>
-                            Email
-                            <input type="email" id="register-email" required placeholder="you@example.com">
-                        </label>
-                        <label>
-                            Password
-                            <input type="password" id="register-password" required placeholder="Create a password">
-                            <small class="helper-text">At least 8 characters, with uppercase, lowercase, number, and special symbol.</small>
-                        </label>
-                        <button type="submit" class="primary-btn full-width">Create account</button>
-                        <button type="button" id="switch-to-login" class="ghost-btn full-width">Already registered? Login</button>
-                    </form>
-
-                    <div id="verify-panel" class="stack-form hidden">
-                        <label>
-                            Verification token
-                            <input type="text" id="verify-token" readonly>
-                            <small class="helper-text">Prototype mode: verify directly here, then continue to your workspace.</small>
-                        </label>
-                        <button type="button" id="verify-account-btn" class="primary-btn full-width">Verify account</button>
-                        <button type="button" id="back-to-login-btn" class="ghost-btn full-width">Back to login</button>
-                    </div>
                 </div>
-            </section>
-
-            <section id="view-survey" class="view">
-                <div class="panel setup-panel">
-                    <div class="panel-header">
-                        <p class="eyebrow">Optional personalization</p>
-                        <h2>Make your future insights sharper</h2>
-                        <p>You can skip this and start analyzing right away.</p>
-                    </div>
-
-                    <form id="survey-form" class="stack-form">
-                        <label>
-                            Main financial goal
-                            <input type="text" id="survey-financial-goal" placeholder="Save more consistently">
-                        </label>
-                        <label>
-                            Why are you using this tool?
-                            <input type="text" id="survey-tracker-goal" placeholder="I want fast monthly financial reviews">
-                        </label>
-                        <label>
-                            Starting balance
-                            <input type="number" id="survey-capital" min="0" step="0.01" placeholder="Optional">
-                        </label>
-                        <label>
-                            Currency
-                            <select id="survey-capital-currency">
-                                <option value="PLN">PLN</option>
-                                <option value="USD">USD</option>
-                                <option value="EUR">EUR</option>
-                                <option value="UAH">UAH</option>
-                                <option value="GBP">GBP</option>
-                            </select>
-                        </label>
-                        <label class="hidden">
-                            Age
-                            <input type="number" id="survey-age" min="1">
-                        </label>
-                        <label class="hidden">
-                            Skills
-                            <input type="text" id="survey-skills">
-                        </label>
-                        <label class="hidden">
-                            Non-financial goal
-                            <input type="text" id="survey-non-financial-goal">
-                        </label>
-                        <div class="button-row">
-                            <button type="submit" class="primary-btn">Save preferences</button>
-                            <button type="button" id="skip-survey-btn" class="ghost-btn">Skip for now</button>
-                        </div>
-                    </form>
-                </div>
-            </section>
-
-            <section id="view-app" class="view">
-                <div class="app-shell">
-                    <aside class="app-sidebar">
-                        <div class="sidebar-card">
-                            <p class="eyebrow">Workspace</p>
-                            <h2 id="sidebar-user-name">Welcome</h2>
-                            <p id="sidebar-user-email" class="muted-text"></p>
-                        </div>
-
-                        <div class="sidebar-nav">
-                            <button class="nav-btn active" data-route="#/app/analyze">
-                                <span class="nav-icon">◎</span>
-                                <span>
-                                    <strong>Analyze</strong>
-                                    <small>Input, result, quick actions</small>
-                                </span>
-                            </button>
-                            <button class="nav-btn" data-route="#/app/details">
-                                <span class="nav-icon">◫</span>
-                                <span>
-                                    <strong>Details</strong>
-                                    <small>Transactions and manual mode</small>
-                                </span>
-                            </button>
-                            <button class="nav-btn" data-route="#/app/ai">
-                                <span class="nav-icon">✦</span>
-                                <span>
-                                    <strong>Follow-up AI</strong>
-                                    <small>Ask questions about the result</small>
-                                </span>
-                            </button>
-                        </div>
-                    </aside>
-
-                    <div class="app-content">
-                        <section id="page-analyze" class="app-page active">
-                            <div class="analysis-hero">
-                                <div>
-                                    <p class="eyebrow">Fast review</p>
-                                    <h1>Give your money context, get a clear answer back.</h1>
-                                    <p class="dashboard-subtitle">Start with a short text, a quick list of transactions, or use the backup manual mode later in details.</p>
-                                </div>
-                                <div class="dashboard-header-meta">
-                                    <span class="dashboard-date">Updated <strong id="last-updated">Now</strong></span>
-                                    <p class="muted-text" id="dashboard-status">Ready to analyze.</p>
-                                </div>
-                            </div>
-
-                            <section class="analysis-input-grid">
-                                <article class="panel input-panel">
-                                    <div class="panel-header">
-                                        <p class="eyebrow">Input</p>
-                                        <h2>Describe or paste your spending</h2>
-                                        <p>Use natural language. The parser will extract transaction type, amount, category, date, and currency.</p>
-                                    </div>
-                                    <form id="ai-parse-form" class="stack-form">
-                                        <label>
-                                            Describe spending or income
-                                            <textarea id="ai-text" rows="6" placeholder="Yesterday groceries 120 PLN, today freelance payment 400 USD"></textarea>
-                                        </label>
-                                        <button type="submit" class="primary-btn">Analyze now</button>
-                                    </form>
-                                    <div id="ai-preview" class="result-preview hidden">
-                                        <div class="panel-header tight">
-                                            <p class="eyebrow">Parsed preview</p>
-                                            <h3>Before saving</h3>
-                                        </div>
-                                        <div id="ai-preview-content" class="preview-grid"></div>
-                                        <div class="button-row">
-                                            <button id="confirm-ai-btn" type="button" class="primary-btn">Save this transaction</button>
-                                            <button id="discard-ai-btn" type="button" class="ghost-btn">Discard</button>
-                                        </div>
-                                    </div>
-                                </article>
-
-                                <article class="panel quick-context-panel">
-                                    <div class="panel-header">
-                                        <p class="eyebrow">Examples</p>
-                                        <h2>Try one of these</h2>
-                                    </div>
-                                    <div class="prompt-suggestions static-suggestions">
-                                        <button class="prompt-chip prompt-fill" type="button" data-fill="Yesterday groceries 120 PLN and taxi 43 PLN">Yesterday groceries 120 PLN and taxi 43 PLN</button>
-                                        <button class="prompt-chip prompt-fill" type="button" data-fill="Last week I got salary 5500 PLN and spent 390 on food">Last week I got salary 5500 PLN and spent 390 on food</button>
-                                        <button class="prompt-chip prompt-fill" type="button" data-fill="Вчора заробив на фрілансі 400 доларів, сьогодні кава 15 злотих">Вчора заробив на фрілансі 400 доларів, сьогодні кава 15 злотих</button>
-                                    </div>
-                                </article>
-                            </section>
-
-                            <section class="result-shell">
-                                <div class="summary-toolbar">
-                                    <div>
-                                        <p class="eyebrow">Result window</p>
-                                        <h3>Current period</h3>
-                                    </div>
-                                    <select id="period-filter" class="period-select">
-                                        <option value="day">Day</option>
-                                        <option value="week">Week</option>
-                                        <option value="month" selected>Month</option>
-                                        <option value="year">Year</option>
-                                    </select>
-                                </div>
-
-                                <article class="panel headline-panel">
-                                    <p class="eyebrow">Primary finding</p>
-                                    <h2 id="primary-insight-title">No analysis yet</h2>
-                                    <p id="primary-insight-message">Add transactions or ask AI to parse a spending note to start seeing patterns.</p>
-                                    <div class="result-actions">
-                                        <button id="ask-follow-up-btn" class="primary-btn" type="button">Ask follow-up</button>
-                                        <button id="see-details-btn" class="ghost-btn" type="button">See details</button>
-                                    </div>
-                                </article>
-
-                                <section class="summary-section result-summary">
-                                    <article class="summary-card metric-card">
-                                        <h3>Total balance</h3>
-                                        <p id="balance">0.00 PLN</p>
-                                        <span id="balance-note" class="metric-note">Current balance view</span>
-                                    </article>
-                                    <article class="summary-card metric-card">
-                                        <h3>Total income</h3>
-                                        <p id="income">0.00 PLN</p>
-                                        <span id="income-note" class="metric-note">Tracked inflows</span>
-                                    </article>
-                                    <article class="summary-card metric-card">
-                                        <h3>Total expenses</h3>
-                                        <p id="expenses">0.00 PLN</p>
-                                        <span id="expense-note" class="metric-note">Tracked outflows</span>
-                                    </article>
-                                    <article class="summary-card metric-card">
-                                        <h3>Savings rate</h3>
-                                        <p id="savings-rate">0.0%</p>
-                                        <span id="savings-note" class="metric-note">Income minus expenses</span>
-                                    </article>
-                                </section>
-
-                                <section class="charts-shell">
-                                    <div class="panel chart-panel chart-panel-wide">
-                                        <div class="panel-header">
-                                            <p class="eyebrow">Trend</p>
-                                            <h2>How your balance evolves</h2>
-                                            <p>Trajectory across the selected period.</p>
-                                        </div>
-                                        <div class="chart-stage chart-stage-line">
-                                            <canvas id="line-chart"></canvas>
-                                        </div>
-                                    </div>
-                                    <div class="panel chart-panel">
-                                        <div class="panel-header">
-                                            <p class="eyebrow">Category split</p>
-                                            <h2>Where the money goes</h2>
-                                            <p>Expense mix for this view.</p>
-                                        </div>
-                                        <div class="chart-stage chart-stage-pie">
-                                            <canvas id="pie-chart"></canvas>
-                                        </div>
-                                    </div>
-                                    <div class="panel chart-panel chart-panel-wide">
-                                        <div class="panel-header">
-                                            <p class="eyebrow">Comparison</p>
-                                            <h2>Income vs expenses</h2>
-                                            <p>Cash flow comparison across periods.</p>
-                                        </div>
-                                        <div class="chart-stage chart-stage-bar">
-                                            <canvas id="bar-chart"></canvas>
-                                        </div>
-                                    </div>
-                                </section>
-
-                                <section class="content-grid">
-                                    <article class="panel insights-panel">
-                                        <div class="panel-header">
-                                            <p class="eyebrow">Key insights</p>
-                                            <h2>What matters most right now</h2>
-                                        </div>
-                                        <div id="insights-list" class="insights-list"></div>
-                                    </article>
-                                </section>
-                            </section>
-                        </section>
-
-                        <section id="page-details" class="app-page">
-                            <div class="section-head">
-                                <div>
-                                    <p class="eyebrow">Advanced mode</p>
-                                    <h1>Manual tracking and transaction details</h1>
-                                    <p class="dashboard-subtitle">This is the backup mode for people who want full control after the AI summary.</p>
-                                </div>
-                            </div>
-
-                            <section class="dashboard-grid dashboard-actions-grid">
-                                <div class="panel">
-                                    <div class="panel-header">
-                                        <p class="eyebrow">Manual input</p>
-                                        <h2 id="manual-form-title">Add transaction</h2>
-                                        <p>Keep direct control over transactions when needed.</p>
-                                    </div>
-                                    <form id="transaction-form" class="form-grid">
-                                        <label>
-                                            Note
-                                            <input type="text" id="name" name="name" placeholder="Grocery shopping" required>
-                                        </label>
-                                        <label>
-                                            Amount
-                                            <input type="number" id="amount" name="amount" placeholder="120.50" step="0.01" min="0.01" required>
-                                        </label>
-                                        <label>
-                                            Type
-                                            <select id="type" name="type" required></select>
-                                        </label>
-                                        <label>
-                                            Category
-                                            <select id="category" name="category" required></select>
-                                        </label>
-                                        <label>
-                                            Date
-                                            <input type="date" id="date" name="date" required>
-                                        </label>
-                                        <div class="button-row full-span">
-                                            <button type="submit" id="submit-btn" class="primary-btn">Add transaction</button>
-                                            <button type="button" id="cancel-edit-btn" class="ghost-btn hidden">Cancel edit</button>
-                                        </div>
-                                    </form>
-                                </div>
-
-                                <div class="panel">
-                                    <div class="panel-header">
-                                        <p class="eyebrow">Filters</p>
-                                        <h2>Inspect transactions</h2>
-                                    </div>
-                                    <div class="filters-grid">
-                                        <select id="filter-type"></select>
-                                        <select id="filter-category"></select>
-                                        <input type="date" id="from-date">
-                                        <input type="date" id="to-date">
-                                        <input type="text" id="search" placeholder="Search notes">
-                                    </div>
-                                </div>
-                            </section>
-
-                            <section class="panel transactions-panel">
-                                <div class="panel-header">
-                                    <p class="eyebrow">Details</p>
-                                    <h2>Recent transactions</h2>
-                                    <p>The full list stays here, not on the main analysis screen.</p>
-                                </div>
-                                <div class="table-wrap">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>Date</th>
-                                                <th>Note</th>
-                                                <th>Category</th>
-                                                <th>Type</th>
-                                                <th>Source</th>
-                                                <th>Amount</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="transactions-body">
-                                            <tr><td colspan="7">No transactions yet.</td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </section>
-                        </section>
-
-                        <section id="page-ai" class="app-page">
-                            <div class="ai-layout">
-                                <div class="panel ai-chat-panel">
-                                    <div class="panel-header">
-                                        <p class="eyebrow">Follow-up assistant</p>
-                                        <h1>Ask about the result you just saw</h1>
-                                        <p>Use this after analysis to understand what matters, what changed, and what to do next.</p>
-                                    </div>
-                                    <div id="chat-messages" class="chat-messages"></div>
-                                    <form id="chat-form" class="chat-form">
-                                        <textarea id="chat-input" rows="4" placeholder="What hurts my budget most right now?" required></textarea>
-                                        <button type="submit" class="primary-btn">Send</button>
-                                    </form>
-                                </div>
-                                <aside class="panel ai-side-panel">
-                                    <div class="panel-header">
-                                        <p class="eyebrow">Follow-up prompts</p>
-                                        <h2>Ask sharper questions</h2>
-                                    </div>
-                                    <div class="prompt-suggestions">
-                                        <button class="prompt-chip" type="button" data-prompt="What hurts my budget the most right now?">What hurts my budget the most?</button>
-                                        <button class="prompt-chip" type="button" data-prompt="What changed compared with the previous period?">What changed this period?</button>
-                                        <button class="prompt-chip" type="button" data-prompt="What should I do next to improve my finances?">What should I do next?</button>
-                                        <button class="prompt-chip" type="button" data-prompt="Where can I realistically save money without changing everything?">Where can I realistically save money?</button>
-                                    </div>
-                                </aside>
-                            </div>
-                        </section>
-                    </div>
-                </div>
-            </section>
-        </main>
-    </div>
+            </div>
+        </section>
+    </main>
 
     <div id="toast" class="toast hidden"></div>
 

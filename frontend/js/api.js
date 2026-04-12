@@ -11,11 +11,15 @@ const ACCESS_TOKEN_KEY = "ai_fin_assistant_access_token";
 async function apiRequest(path, options = {}) {
     const token = authApi.getToken();
     const isNgrokBackend = API_BASE.includes("ngrok-free.dev") || API_BASE.includes("ngrok.app");
+    const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
     const headers = {
-        "Content-Type": "application/json",
         ...(isNgrokBackend ? { "ngrok-skip-browser-warning": "true" } : {}),
         ...(options.headers || {})
     };
+
+    if (!isFormData) {
+        headers["Content-Type"] = headers["Content-Type"] || "application/json";
+    }
 
     if (token) {
         headers.Authorization = `Bearer ${token}`;
@@ -153,6 +157,15 @@ const transactionsApi = {
         return apiRequest("/transactions/parse-text", {
             method: "POST",
             body: JSON.stringify(payload)
+        });
+    },
+
+    analyzeFile(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        return apiRequest("/transactions/analyze-file", {
+            method: "POST",
+            body: formData
         });
     },
 

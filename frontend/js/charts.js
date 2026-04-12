@@ -3,14 +3,14 @@ let balanceTrendChartInstance = null;
 let cashFlowChartInstance = null;
 
 const chartPalette = {
-    blue: "#3b82f6",
-    blueSoft: "rgba(59, 130, 246, 0.18)",
-    emerald: "#10b981",
-    emeraldSoft: "rgba(16, 185, 129, 0.18)",
-    red: "#ef4444",
-    redSoft: "rgba(239, 68, 68, 0.18)",
-    gray: "#94a3b8",
-    grid: "rgba(148, 163, 184, 0.16)"
+    blue: "#77aef8",
+    blueSoft: "rgba(119, 174, 248, 0.16)",
+    emerald: "#58b97f",
+    emeraldSoft: "rgba(88, 185, 127, 0.16)",
+    red: "#f08c8c",
+    redSoft: "rgba(240, 140, 140, 0.16)",
+    gray: "#8f98a8",
+    grid: "rgba(95, 130, 110, 0.12)"
 };
 
 function destroyChart(chart) {
@@ -78,13 +78,21 @@ function getSharedOptions(currency = "PLN") {
     return {
         responsive: true,
         maintainAspectRatio: false,
+        animation: {
+            duration: 850,
+            easing: "easeOutQuart"
+        },
+        interaction: {
+            mode: "nearest",
+            intersect: false
+        },
         plugins: {
             legend: {
                 labels: {
-                    color: "#475467",
+                    color: "#406057",
                     font: {
-                        family: "Manrope",
-                        size: 13,
+                        family: "Nunito Sans",
+                        size: 12,
                         weight: "700"
                     },
                     boxWidth: 12,
@@ -94,19 +102,19 @@ function getSharedOptions(currency = "PLN") {
                 }
             },
             tooltip: {
-                backgroundColor: "rgba(255,255,255,0.96)",
-                titleColor: "#0f172a",
-                bodyColor: "#334155",
-                borderColor: "rgba(226, 232, 240, 1)",
+                backgroundColor: "rgba(255,255,255,0.98)",
+                titleColor: "#193229",
+                bodyColor: "#406057",
+                borderColor: "rgba(73, 127, 93, 0.14)",
                 borderWidth: 1,
                 padding: 14,
                 displayColors: true,
                 titleFont: {
-                    family: "Sora",
+                    family: "Nunito Sans",
                     weight: "700"
                 },
                 bodyFont: {
-                    family: "Manrope",
+                    family: "Nunito Sans",
                     weight: "700"
                 },
                 callbacks: {
@@ -123,9 +131,9 @@ function getSharedOptions(currency = "PLN") {
                     display: false
                 },
                 ticks: {
-                    color: "#667085",
+                    color: "#69857b",
                     font: {
-                        family: "Manrope",
+                        family: "Nunito Sans",
                         weight: "700"
                     }
                 }
@@ -136,9 +144,9 @@ function getSharedOptions(currency = "PLN") {
                     color: chartPalette.grid
                 },
                 ticks: {
-                    color: "#667085",
+                    color: "#69857b",
                     font: {
-                        family: "Manrope",
+                        family: "Nunito Sans",
                         weight: "700"
                     },
                     callback(value) {
@@ -172,46 +180,38 @@ function drawSpendingChart(summary, canvas, currency) {
                 {
                     data: series.values,
                     backgroundColor: [
-                        "#3b82f6",
-                        "#10b981",
-                        "#f59e0b",
-                        "#8b5cf6",
-                        "#ec4899",
-                        "#64748b",
-                        "#06b6d4",
-                        "#f97316"
+                        "#77aef8",
+                        "#58b97f",
+                        "#efc84d",
+                        "#9d7ef8",
+                        "#ef7db4",
+                        "#8f98a8",
+                        "#8be0d1",
+                        "#f4a261"
                     ],
-                    borderColor: "#ffffff",
-                    borderWidth: 5,
-                    hoverOffset: 10
+                    borderColor: "#f9fff9",
+                    borderWidth: 6,
+                    hoverOffset: 8
                 }
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: "68%",
+            cutout: "72%",
+            animation: {
+                duration: 900,
+                easing: "easeOutQuart"
+            },
             plugins: {
                 legend: {
-                    position: "bottom",
-                    labels: {
-                        color: "#475467",
-                        font: {
-                            family: "Manrope",
-                            size: 13,
-                            weight: "700"
-                        },
-                        boxWidth: 12,
-                        boxHeight: 12,
-                        usePointStyle: true,
-                        pointStyle: "circle"
-                    }
+                    display: false
                 },
                 tooltip: {
-                    backgroundColor: "rgba(255,255,255,0.96)",
-                    titleColor: "#0f172a",
-                    bodyColor: "#334155",
-                    borderColor: "rgba(226, 232, 240, 1)",
+                    backgroundColor: "rgba(255,255,255,0.98)",
+                    titleColor: "#193229",
+                    bodyColor: "#406057",
+                    borderColor: "rgba(73, 127, 93, 0.14)",
                     borderWidth: 1,
                     padding: 14,
                     callbacks: {
@@ -251,9 +251,9 @@ function drawBalanceTrendChart(summary, canvas, currency) {
                     backgroundColor: chartPalette.blueSoft,
                     fill: true,
                     tension: 0.36,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    pointBackgroundColor: "#ffffff",
+                    pointRadius: 5,
+                    pointHoverRadius: 8,
+                    pointBackgroundColor: "#f9fff9",
                     pointBorderColor: chartPalette.blue,
                     pointBorderWidth: 3
                 }
@@ -296,19 +296,7 @@ function drawCashFlowChart(summary, canvas, activeTypeFilter, currency) {
             plugins: {
                 ...getSharedOptions(currency).plugins,
                 legend: {
-                    position: "bottom",
-                    labels: {
-                        color: "#475467",
-                        font: {
-                            family: "Manrope",
-                            size: 13,
-                            weight: "700"
-                        },
-                        boxWidth: 12,
-                        boxHeight: 12,
-                        usePointStyle: true,
-                        pointStyle: "circle"
-                    }
+                    position: "bottom"
                 }
             }
         }
